@@ -5,10 +5,51 @@ Guide pour l’**étape 6** du [ROADMAP](../ROADMAP.md). Stack : Ubuntu, Nginx, 
 ## Prérequis
 
 - VPS Ubuntu avec Nginx (Hostinger OK)
-- Sous-domaine pointant vers le VPS (`jttof.tondomaine.fr`)
+- **Avec domaine** : sous-domaine en DNS → IP du VPS (`jttof.tondomaine.fr`)
+- **Sans domaine** : accès direct `http://IP:port/` — voir [Accès par IP seule](#accès-par-ip-seule-sans-domaine)
 - Repo Git accessible depuis le VPS (GitHub, ou `rsync` depuis ta machine)
 - Clés API dans `backend/.env` (TMDb + Google Places)
 - **Google Maps** : restreindre la clé par **IP du VPS** dans Google Cloud Console
+
+## Accès par IP seule (sans domaine)
+
+Pas de Certbot ni HTTPS pour l’instant — **HTTP uniquement** (mot de passe Basic Auth quand même).
+
+**Choisir un port public** (ouvert dans le pare-feu Hostinger) :
+
+```bash
+ss -tlnp | grep -E ':80 |:8080 '   # voir ce qui est déjà pris
+```
+
+| Port | URL depuis le téléphone |
+|------|-------------------------|
+| `80` | `http://168.231.85.64/` |
+| `8080` | `http://168.231.85.64:8080/` |
+
+Sur le VPS (exemple port **80**) :
+
+```bash
+cd /opt/jttof && git pull
+
+COCON_PORT=80   # ou 8080 si le 80 est occupé
+
+sudo sed "s/COCON_PORT/${COCON_PORT}/g" deploy/nginx-jttof-ip.conf \
+  | sudo tee /etc/nginx/sites-available/jttof
+sudo ln -sf /etc/nginx/sites-available/jttof /etc/nginx/sites-enabled/jttof
+
+# Retirer l'ancienne config cassée (443 sans certificat) si besoin
+sudo rm -f /etc/nginx/sites-enabled/default   # seulement si tu n'as pas d'autre site sur ce VPS
+
+sudo htpasswd -c /etc/nginx/.htpasswd-jttof cocon   # si pas déjà fait
+sudo nginx -t && sudo systemctl reload nginx
+
+sudo systemctl enable --now jttof
+curl -s http://127.0.0.1:8765/api/health
+```
+
+Puis dans le **panneau Hostinger** : autoriser le port TCP choisi (80 ou 8080) pour le VPS.
+
+> Quand tu auras un domaine plus tard : `deploy/nginx-jttof.conf` + `certbot --nginx`.
 
 ## 1. Cloner le projet
 
@@ -96,7 +137,8 @@ sudo bash deploy/update.sh
 | Fichier | Rôle |
 |---------|------|
 | `deploy/jttof.service` | Service systemd |
-| `deploy/nginx-jttof.conf` | Modèle Nginx + Basic Auth |
+| `deploy/nginx-jttof.conf` | Nginx + domaine + Certbot (plus tard) |
+| `deploy/nginx-jttof-ip.conf` | Nginx + IP seule, HTTP, sans SSL |
 | `deploy/backup-db.sh` | Sauvegarde SQLite (cron 3h) |
 | `deploy/setup-server.sh` | Première install |
 | `deploy/update.sh` | Mise à jour rapide |
