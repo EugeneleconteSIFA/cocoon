@@ -1,0 +1,40 @@
+# ─── Secrets ─────────────────────────────────
+backend/.env
+.env
+*.env.local
+
+# ─── Données runtime ─────────────────────────
+data/
+backups/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# ─── Python ──────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# ─── Éditeurs / OS ───────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ─── Logs ────────────────────────────────────
+*.log
+logs/
+
+# ─── Archives historiques ────────────────────
+# bulle.html est gardé volontairement pour mémoire,
+# mais on n'y touche plus.
