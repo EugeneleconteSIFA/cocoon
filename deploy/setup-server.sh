@@ -37,7 +37,7 @@ sudo -u jttof "$INSTALL_DIR/.venv/bin/pip" install -r "$INSTALL_DIR/backend/requ
 # .env production
 if [[ ! -f "$INSTALL_DIR/backend/.env" ]]; then
   cp "$INSTALL_DIR/backend/.env.example" "$INSTALL_DIR/backend/.env"
-  sed -i 's/^APP_ENV=local/APP_ENV=production/' "$INSTALL_DIR/backend/.env"
+  sed -i 's/^APP_ENV=.*/APP_ENV=production/' "$INSTALL_DIR/backend/.env"
   chown jttof:jttof "$INSTALL_DIR/backend/.env"
   chmod 600 "$INSTALL_DIR/backend/.env"
   echo ""
