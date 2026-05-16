@@ -58,11 +58,18 @@ sudo htpasswd -c /etc/nginx/.htpasswd-jttof cocon
 
 Le navigateur demandera identifiant / mot de passe avant d’afficher Cocon.
 
-## 5. HTTPS (Certbot)
+## 5. Nginx puis HTTPS (Certbot)
+
+La config Nginx démarre en **HTTP seul** (pas de bloc `443` vide — sinon `nginx -t` échoue avant Certbot).
 
 ```bash
-sudo certbot --nginx -d jttof.tondomaine.fr
+# Remplacer TON_VRAI_DOMAINE (pas le placeholder TONDOMAINE.fr)
+sudo sed "s/COCON_DOMAIN/TON_VRAI_DOMAINE/g" /opt/jttof/deploy/nginx-jttof.conf | sudo tee /etc/nginx/sites-available/jttof
+sudo ln -sf /etc/nginx/sites-available/jttof /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
+
+# Certbot ajoute HTTPS tout seul
+sudo certbot --nginx -d TON_VRAI_DOMAINE
 ```
 
 ## 6. Démarrer / vérifier
