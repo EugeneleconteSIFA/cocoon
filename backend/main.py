@@ -74,6 +74,7 @@ def health() -> dict:
         "app": "cocon",
         "version": app.version,
         "env": os.getenv("APP_ENV", "local"),
+        "secret_key_set": bool((os.getenv("SECRET_KEY") or "").strip()),
     }
 
 
