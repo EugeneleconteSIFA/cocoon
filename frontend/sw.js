@@ -4,7 +4,7 @@
  *  Icônes / manifest → cache pour offline.
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v11';
+const CACHE_NAME = 'cocon-v12';
 
 const OFFLINE_ASSETS = [
   '/manifest.json',

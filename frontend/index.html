@@ -8,13 +8,13 @@
   <title>Cocon — notre carnet à deux</title>
 
   <!-- PWA -->
-  <link rel="icon" href="/icons/favicon-32.png?v=2" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/icons/favicon-32.png?v=3" type="image/png" sizes="32x32" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Cocon" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=3" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=13" />
+  <link rel="stylesheet" href="/style.css?v=14" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -189,11 +189,12 @@
   <div class="app">
     <!-- ─── Header ──────────────────────────────────────────────── -->
     <header class="topbar" role="banner">
-      <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
-        <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
-      </a>
-      <div class="topbar__cocon">
-        <div class="cocon-switcher" data-cocon-select hidden>
+      <div class="topbar__brand">
+        <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
+          <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
+        </a>
+        <div class="topbar__cocon">
+          <div class="cocon-switcher" data-cocon-select hidden>
           <button
             class="cocon-switcher__name"
             type="button"
@@ -208,6 +209,7 @@
             <p class="cocon-switcher__menu-title">Changer de cocon</p>
             <ul class="cocon-switcher__list" data-cocon-list></ul>
             <button class="cocon-switcher__new" type="button" data-action="new-cocon">+ Nouveau cocon</button>
+            </div>
           </div>
         </div>
       </div>

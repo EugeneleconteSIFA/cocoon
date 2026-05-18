@@ -1,43 +1,57 @@
 #!/usr/bin/env python3
-"""Génère favicon / PWA / apple-touch à partir de frontend/icons/logo.jpg."""
+"""Génère favicon / PWA / apple-touch avec la pivoine Cocon (DA.md)."""
 
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 CREAM = "#FAF1EB"
-PADDING = 0.08  # marge autour du logo (zone sûre maskable)
+PEONY = "#B86578"
+PADDING = 0.14  # zone sûre maskable / home screen
+
+# viewBox 0 0 24 24 — symbole #i-peony dans index.html
+_PEONY_PARTS = (
+    (12, 12, 2.2, 2.2),
+    (12, 6.5, 2.4, 3.4),
+    (12, 17.5, 2.4, 3.4),
+    (6.5, 12, 3.4, 2.4),
+    (17.5, 12, 3.4, 2.4),
+)
 
 
-def _load_square_logo(path: Path) -> Image.Image:
-    img = Image.open(path).convert("RGBA")
-    w, h = img.size
-    side = min(w, h)
-    left = (w - side) // 2
-    top = (h - side) // 2
-    return img.crop((left, top, left + side, top + side))
+def render_peony_icon(size: int) -> Image.Image:
+    img = Image.new("RGBA", (size, size), CREAM)
+    draw = ImageDraw.Draw(img)
 
+    x0 = size * PADDING
+    y0 = size * PADDING
+    x1 = size * (1 - PADDING)
+    y1 = size * (1 - PADDING)
+    span = x1 - x0
 
-def render_icon(logo: Image.Image, size: int) -> Image.Image:
-    bg = Image.new("RGBA", (size, size), CREAM)
-    inner = int(size * (1 - 2 * PADDING))
-    scaled = logo.resize((inner, inner), Image.Resampling.LANCZOS)
-    offset = (size - inner) // 2
-    bg.paste(scaled, (offset, offset), scaled)
-    return bg.convert("RGB")
+    def tx(x: float) -> float:
+        return x0 + (x / 24) * span
+
+    def ty(y: float) -> float:
+        return y0 + (y / 24) * span
+
+    stroke = max(2, round(size * 1.45 / 24))
+
+    for cx, cy, rx, ry in _PEONY_PARTS:
+        draw.ellipse(
+            (tx(cx - rx), ty(cy - ry), tx(cx + rx), ty(cy + ry)),
+            outline=PEONY,
+            width=stroke,
+        )
+
+    return img.convert("RGB")
 
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
-    # Source : placer logo-source.jpg à la racine du repo ou dans frontend/icons/
-    src = root / "frontend" / "icons" / "logo-source.jpg"
-    if not src.is_file():
-        src = root / "scripts" / "logo-source.jpg"
     out = root / "frontend" / "icons"
-    if not src.is_file():
-        raise SystemExit(f"Source introuvable : {src}")
+    out.mkdir(parents=True, exist_ok=True)
 
-    logo = _load_square_logo(src)
     sizes = {
         "icon-512.png": 512,
         "icon-192.png": 192,
@@ -45,7 +59,7 @@ def main() -> None:
         "favicon-32.png": 32,
     }
     for name, px in sizes.items():
-        render_icon(logo, px).save(out / name, optimize=True)
+        render_peony_icon(px).save(out / name, optimize=True)
         print(f"  {out / name} ({px}×{px})")
 
 

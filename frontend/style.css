@@ -118,9 +118,15 @@ body {
   transition: background-color var(--t) var(--ease), border-color var(--t) var(--ease);
 }
 
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
 .logo {
-  position: relative;
-  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -145,22 +151,12 @@ body {
 }
 
 .topbar__cocon {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-top: env(safe-area-inset-top, 0px);
-  pointer-events: none;
-  z-index: 1;
 }
 
 .topbar__tools {
-  position: relative;
-  z-index: 2;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -1159,21 +1155,19 @@ body {
 /* ─── 14. Sélecteur cocon (intégré topbar, clic sur le nom) ─────── */
 .cocon-switcher {
   position: relative;
-  pointer-events: auto;
-  max-width: min(52vw, 240px);
+  max-width: min(calc(100vw - 168px), 280px);
 }
 
 .cocon-switcher__name {
   display: block;
-  width: 100%;
   max-width: 100%;
   height: 40px;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: clamp(17px, 4.5vw, 20px);
   line-height: 40px;
-  text-align: center;
+  text-align: left;
   letter-spacing: -0.2px;
   color: var(--ink);
   cursor: pointer;
@@ -1192,8 +1186,7 @@ body {
 .cocon-switcher__menu {
   position: absolute;
   top: calc(100% + 4px);
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   z-index: 30;
   min-width: 200px;
   max-width: min(88vw, 260px);
