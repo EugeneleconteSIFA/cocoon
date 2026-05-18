@@ -1351,6 +1351,24 @@
     document.querySelector('[data-action="header-search"]')?.addEventListener('click', () => {
       openAddForTab(currentTab());
     });
+
+    // ─── Toggle dark mode ────────────────────────────────────────
+    document.querySelector('[data-action="toggle-theme"]')?.addEventListener('click', () => {
+      const html = document.documentElement;
+      const isDark = html.classList.contains('dark');
+      if (isDark) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        localStorage.setItem('cocon:theme', 'light');
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        localStorage.setItem('cocon:theme', 'dark');
+      }
+      // Mettre à jour le theme-color pour iOS
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = isDark ? '#B86578' : '#1E1318';
+    });
   }
 
   if (document.readyState === 'loading') {

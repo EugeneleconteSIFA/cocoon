@@ -76,14 +76,14 @@ On clone la mécanique du pilier Culture, en l'adaptant :
 
 ---
 
-## Étape 6 — Déploiement sur le VPS
+## Étape 6 — Déploiement sur le VPS ✅
 - [x] Fichiers prêts dans `deploy/` : `jttof.service`, `nginx-jttof.conf`, `setup-server.sh`, `update.sh`, `backup-db.sh`, `README.md`.
-- [ ] **Sur le VPS** : cloner le repo dans `/opt/jttof/`.
-- [ ] **Sur le VPS** : `backend/.env` (clés API, `APP_ENV=production`), Google Maps restreint par IP VPS.
-- [ ] **Sur le VPS** : `sudo COCON_DOMAIN=jttof.tondomaine.fr bash deploy/setup-server.sh`
-- [ ] **Sur le VPS** : `htpasswd` (Basic Auth) + `certbot --nginx` + `systemctl start jttof`.
+- [x] **Sur le VPS** : cloner le repo dans `/opt/jttof/`.
+- [x] **Sur le VPS** : `backend/.env` (clés API, `APP_ENV=production`), Google Maps restreint par IP VPS.
+- [x] **Sur le VPS** : `sudo COCON_DOMAIN=jttof.tondomaine.fr bash deploy/setup-server.sh`
+- [x] **Sur le VPS** : `htpasswd` (Basic Auth) + `certbot --nginx` + `systemctl start jttof`.
 
-**Sortie :** l'app est joignable sur `https://jttof.{ton-domaine}/`, depuis le téléphone de la copine aussi.
+**Sortie :** ✅ L'app est joignable sur `https://jttof.{ton-domaine}/`, depuis le téléphone de la copine aussi.
 
 > Guide pas à pas : [deploy/README.md](deploy/README.md)
 
@@ -95,8 +95,8 @@ Une fois que ça tourne, et seulement après :
 - [ ] Animations légères (apparition de carte, tirage au sort).
 - [ ] Onglet/section **Souvenirs** (timeline des éléments cochés "ensemble").
 - [ ] Bouton export JSON + import JSON.
-- [ ] Mode sombre ? (optionnel, à juger une fois la version claire stable).
-- [ ] PWA / icône d'app sur écran d'accueil iOS.
+- [x] Mode sombre (toggle lune/soleil topbar, persistance localStorage, respect prefers-color-scheme).
+- [x] PWA / icône d'app sur écran d'accueil iOS (manifest.json, sw.js, icônes 192/512/apple-touch-icon).
 
 ---
 
