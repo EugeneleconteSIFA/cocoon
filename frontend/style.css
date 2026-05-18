@@ -261,6 +261,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-align: center;
   padding: var(--space-6) var(--space-4) var(--space-7);
 }
@@ -269,77 +270,19 @@ body {
   display: none !important;
 }
 
-.welcome__ornament {
-  width: 40px;
-  height: 40px;
-  color: var(--copper);
-  opacity: 0.55;
-  margin-bottom: var(--space-5);
-}
-
 .welcome__title {
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: clamp(36px, 10vw, 44px);
   font-weight: 400;
   color: var(--peony);
   line-height: 1.1;
-  margin-bottom: var(--space-2);
-}
-
-.welcome__tagline {
-  font-family: 'Lora', serif;
-  font-style: italic;
-  font-size: 16px;
-  color: var(--ink-soft);
-  margin-bottom: var(--space-5);
-}
-
-.welcome__lead {
-  font-family: 'Lora', serif;
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--ink);
-  max-width: 34ch;
-  margin-bottom: var(--space-6);
-}
-
-.welcome__pillars {
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 280px;
-  margin-bottom: var(--space-6);
-}
-
-.welcome__pillar {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-3);
-  background: var(--ivory);
-  border-radius: var(--radius);
-  border: 1px solid var(--line-copper);
-  font-family: 'Lora', serif;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-
-.welcome__pillar-icon {
-  width: 26px;
-  height: 26px;
-  color: var(--peony);
+  margin-bottom: var(--space-7);
 }
 
 .welcome__join {
   width: 100%;
   max-width: 320px;
   margin-bottom: var(--space-6);
-  padding: var(--space-5) 0 var(--space-2);
-  border-top: 1px solid var(--line-copper);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -366,15 +309,6 @@ body {
 
 .welcome__cta {
   min-width: 200px;
-  margin-bottom: var(--space-3);
-}
-
-.welcome__hint {
-  font-family: 'Lora', serif;
-  font-size: 12px;
-  font-style: italic;
-  color: var(--ink-faint);
-  max-width: 26ch;
 }
 
 /* ─── 8. État vide (centré dans la vue) ────────────────────────── */

@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=12" />
+  <link rel="stylesheet" href="/style.css?v=13" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -243,37 +243,14 @@
     <main class="views" role="main">
       <!-- Accueil invité (non connecté) -->
       <section class="welcome" data-guest-welcome hidden aria-labelledby="welcome-title">
-        <svg class="welcome__ornament" aria-hidden="true"><use href="#i-peony" /></svg>
         <h1 class="welcome__title" id="welcome-title">Cocon</h1>
-        <p class="welcome__tagline">Notre carnet à deux.</p>
-        <p class="welcome__lead">
-          Films à voir, lieux à explorer, activités et recettes — tout ce que vous gardez pour plus tard, ensemble.
-        </p>
-        <ul class="welcome__pillars" aria-label="Les quatre piliers">
-          <li class="welcome__pillar">
-            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-culture" /></svg>
-            <span>Culture</span>
-          </li>
-          <li class="welcome__pillar">
-            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-lieux" /></svg>
-            <span>Lieux</span>
-          </li>
-          <li class="welcome__pillar">
-            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-activites" /></svg>
-            <span>Activités</span>
-          </li>
-          <li class="welcome__pillar">
-            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-cuisine" /></svg>
-            <span>Cuisine</span>
-          </li>
-        </ul>
         <form class="welcome__join" data-guest-join-form novalidate>
           <p class="welcome__join-label">Tu as un code d'invitation ?</p>
           <input
             class="form-input form-input--mono welcome__join-input"
             type="text"
             data-guest-join-code
-            placeholder="Colle le code ou le lien"
+            placeholder="Colle le ici"
             autocomplete="off"
             spellcheck="false"
             enterkeyhint="go"
@@ -283,7 +260,6 @@
         <button class="btn btn-primary welcome__cta" type="button" data-action="open-auth">
           Se connecter
         </button>
-        <p class="welcome__hint">Pas encore de compte ? Vous pourrez en créer un en un clin d'œil.</p>
       </section>
 
       <div class="views__app" data-views-app>
