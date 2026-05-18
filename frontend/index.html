@@ -8,14 +8,13 @@
   <title>Cocon — notre carnet à deux</title>
 
   <!-- PWA -->
-  <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32" />
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
+  <link rel="icon" href="/icons/favicon-32.png?v=2" type="image/png" sizes="32x32" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Cocon" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -23,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=8" />
+  <link rel="stylesheet" href="/style.css?v=10" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -67,11 +66,9 @@
           if (!hasToken && appEl) {
             appEl.classList.add('app--guest');
             var welcome = document.querySelector('[data-guest-welcome]');
-            var guestTab = document.querySelector('[data-tabbar-guest]');
-            var pillars = document.querySelector('[data-tabbar-pillars]');
+            var tabbar = document.querySelector('[data-tabbar]');
             if (welcome) welcome.hidden = false;
-            if (guestTab) guestTab.hidden = false;
-            if (pillars) pillars.hidden = true;
+            if (tabbar) tabbar.hidden = true;
           } else if (hasToken) {
             var coconSel = document.querySelector('[data-cocon-select]');
             var coconLbl = document.querySelector('[data-cocon-label]');
@@ -165,6 +162,17 @@
         </g>
       </symbol>
 
+      <!-- Partager -->
+      <symbol id="i-share" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </g>
+      </symbol>
+
       <!-- Dés (tirage au sort) -->
       <symbol id="i-shuffle" viewBox="0 0 24 24">
         <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -182,7 +190,8 @@
     <!-- ─── Header ──────────────────────────────────────────────── -->
     <header class="topbar" role="banner">
       <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
-        <img class="logo__img" src="/icons/logo.jpg?v=2" alt="" width="44" height="44" decoding="async" />
+        <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
+        <span class="logo__text">Cocon</span>
       </a>
       <div class="topbar__cocon">
         <div class="cocon-switcher" data-cocon-select hidden>
@@ -455,8 +464,8 @@
       </div>
     </main>
 
-    <!-- ─── Footer : onglets (connecté) ou profil (invité) ─────── -->
-    <nav class="tabbar" data-tabbar role="navigation" aria-label="Navigation">
+    <!-- ─── Footer : onglets (connecté uniquement) ─────────────── -->
+    <nav class="tabbar" data-tabbar role="navigation" aria-label="Sections principales" hidden>
       <div class="tabbar__pillars" data-tabbar-pillars>
         <a class="tab" href="#culture" data-tab="culture">
           <svg class="tab-icon" aria-hidden="true"><use href="#i-culture" /></svg>
@@ -475,14 +484,6 @@
           <span class="tab-label">Cuisine</span>
         </a>
       </div>
-      <button type="button" class="tab tab--guest" data-tabbar-guest data-action="open-auth" hidden>
-        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="8" r="4"/>
-          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-        </svg>
-        <span class="tab-label">Mon profil</span>
-        <span class="tab-sublabel">Se connecter</span>
-      </button>
     </nav>
   </div>
 
@@ -625,7 +626,7 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=12" defer></script>
+  <script src="/app.js?v=14" defer></script>
   <!-- PWA : SW uniquement en local ou HTTPS -->
   <script>
     (function () {

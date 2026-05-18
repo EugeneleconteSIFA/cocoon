@@ -106,10 +106,10 @@ body {
   top: 0;
   z-index: 20;
 
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  display: flex;
   align-items: center;
-  gap: var(--space-2) var(--space-3);
+  justify-content: space-between;
+  min-height: var(--topbar-h);
   padding: var(--space-3) var(--space-4);
   padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
 
@@ -119,31 +119,53 @@ body {
 }
 
 .logo {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
+  gap: var(--space-2);
   flex-shrink: 0;
-  line-height: 0;
+  color: var(--peony);
+  text-decoration: none;
 }
 
-.logo__img {
-  display: block;
-  height: 44px;
-  width: 44px;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
+.logo__peony {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.logo__text {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  color: var(--peony);
 }
 
 .topbar__cocon {
-  min-width: 0;
-  justify-self: stretch;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top, 0px);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .topbar__tools {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 2px;
   flex-shrink: 0;
-  justify-self: end;
+  margin-left: auto;
 }
 
 /* ─── 5. Icon button (générique, ghost) ────────────────────────── */
@@ -192,6 +214,11 @@ body {
 
 .app--guest .views {
   padding-top: var(--space-5);
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+}
+
+.app--guest .tabbar {
+  display: none !important;
 }
 
 .view {
@@ -415,13 +442,6 @@ body {
   display: none !important;
 }
 
-.app--guest .tabbar {
-  display: flex;
-  justify-content: center;
-  padding-top: var(--space-3);
-  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
-}
-
 .tab {
   position: relative;
   display: flex;
@@ -449,38 +469,7 @@ body {
   transition: color var(--t) var(--ease);
 }
 
-.tab-sublabel {
-  font-family: 'Lora', serif;
-  font-size: 10px;
-  font-weight: 400;
-  font-style: italic;
-  letter-spacing: 0.02em;
-  color: var(--ink-faint);
-  line-height: 1.2;
-}
-
-.tab--guest {
-  width: 100%;
-  max-width: 140px;
-  padding: var(--space-2) var(--space-4) var(--space-3);
-  color: var(--peony);
-}
-
-.tab--guest .tab-label {
-  color: var(--ink);
-  font-size: 12px;
-}
-
-.tab--guest[hidden] {
-  display: none !important;
-}
-
-.tab--guest:hover .tab-sublabel {
-  color: var(--ink-soft);
-}
-
 .app--guest .topbar__cocon,
-.app--guest [data-user-btn],
 .app--guest [data-action="header-search"] {
   display: none !important;
 }
@@ -1206,9 +1195,8 @@ body {
 /* ─── 14. Sélecteur cocon (intégré topbar, clic sur le nom) ─────── */
 .cocon-switcher {
   position: relative;
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
+  pointer-events: auto;
+  max-width: min(52vw, 240px);
 }
 
 .cocon-switcher__name {
@@ -1216,31 +1204,32 @@ body {
   width: 100%;
   max-width: 100%;
   height: 40px;
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
   border-radius: var(--radius-sm);
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(16px, 4.5vw, 20px);
+  font-size: clamp(17px, 4.5vw, 20px);
   line-height: 40px;
-  text-align: left;
+  text-align: center;
   letter-spacing: -0.2px;
-  color: var(--peony);
+  color: var(--ink);
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: color var(--t) var(--ease), background-color var(--t) var(--ease);
+  transition: background-color var(--t) var(--ease);
 }
 
 .cocon-switcher__name:hover,
 .cocon-switcher__name[aria-expanded="true"] {
-  color: var(--peony-deep);
+  color: var(--ink);
   background: var(--ivory);
 }
 
 .cocon-switcher__menu {
   position: absolute;
   top: calc(100% + 4px);
-  left: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 30;
   min-width: 200px;
   max-width: min(88vw, 260px);
@@ -1612,17 +1601,51 @@ body {
   margin-top: 2px;
 }
 
+.cocon-manage-item__invite {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
 .cocon-manage-item__code {
   font-family: 'Courier New', monospace;
   font-size: 12px;
   color: var(--peony);
   background: rgba(184, 101, 120, 0.1);
-  padding: 2px 6px;
+  padding: 4px 8px;
+  border: none;
   border-radius: 4px;
   letter-spacing: 0.1em;
   cursor: pointer;
   user-select: all;
-  title: "Copier";
+  transition: background-color var(--t) var(--ease);
+}
+
+.cocon-manage-item__code:hover {
+  background: rgba(184, 101, 120, 0.18);
+}
+
+.cocon-manage-item__share {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  color: var(--peony);
+  transition: background-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+
+.cocon-manage-item__share .icon {
+  width: 20px;
+  height: 20px;
+}
+
+.cocon-manage-item__share:hover {
+  background: var(--ivory);
+  color: var(--peony-deep);
 }
 
 .cocon-actions {

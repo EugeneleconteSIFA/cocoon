@@ -1,56 +1,43 @@
 #!/usr/bin/env python3
-"""Génère favicon / PWA / apple-touch à partir du motif pivoine (viewBox 24×24)."""
+"""Génère favicon / PWA / apple-touch à partir de frontend/icons/logo.jpg."""
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image
 
 CREAM = "#FAF1EB"
-PEONY = "#B86578"
-
-# Géométrie identique à #i-peony dans frontend/index.html
-PEONY_PARTS = [
-    ("circle", 12, 12, 2.2, 2.2),
-    ("ellipse", 12, 6.5, 2.4, 3.4),
-    ("ellipse", 12, 17.5, 2.4, 3.4),
-    ("ellipse", 6.5, 12, 3.4, 2.4),
-    ("ellipse", 17.5, 12, 3.4, 2.4),
-]
-
-VIEW = 24.0
-STROKE = 1.4
-PADDING = 0.16  # marge égale — zone sûre maskable ~80 %
+PADDING = 0.08  # marge autour du logo (zone sûre maskable)
 
 
-def render_icon(size: int) -> Image.Image:
-    img = Image.new("RGB", (size, size), CREAM)
-    draw = ImageDraw.Draw(img)
-    inner = size * (1 - 2 * PADDING)
-    scale = inner / VIEW
-    ox = size * PADDING
-    stroke = max(1, round(STROKE * scale))
+def _load_square_logo(path: Path) -> Image.Image:
+    img = Image.open(path).convert("RGBA")
+    w, h = img.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    return img.crop((left, top, left + side, top + side))
 
-    def x(v: float) -> float:
-        return ox + v * scale
 
-    def y(v: float) -> float:
-        return ox + v * scale
-
-    for kind, cx, cy, rx, ry in PEONY_PARTS:
-        bbox = (x(cx - rx), y(cy - ry), x(cx + rx), y(cy + ry))
-        if kind == "circle":
-            draw.ellipse(bbox, outline=PEONY, width=stroke)
-        else:
-            draw.ellipse(bbox, outline=PEONY, width=stroke)
-
-    return img
+def render_icon(logo: Image.Image, size: int) -> Image.Image:
+    bg = Image.new("RGBA", (size, size), CREAM)
+    inner = int(size * (1 - 2 * PADDING))
+    scaled = logo.resize((inner, inner), Image.Resampling.LANCZOS)
+    offset = (size - inner) // 2
+    bg.paste(scaled, (offset, offset), scaled)
+    return bg.convert("RGB")
 
 
 def main() -> None:
     root = Path(__file__).resolve().parents[1]
+    # Source : placer logo-source.jpg à la racine du repo ou dans frontend/icons/
+    src = root / "frontend" / "icons" / "logo-source.jpg"
+    if not src.is_file():
+        src = root / "scripts" / "logo-source.jpg"
     out = root / "frontend" / "icons"
-    out.mkdir(parents=True, exist_ok=True)
+    if not src.is_file():
+        raise SystemExit(f"Source introuvable : {src}")
 
+    logo = _load_square_logo(src)
     sizes = {
         "icon-512.png": 512,
         "icon-192.png": 192,
@@ -58,7 +45,7 @@ def main() -> None:
         "favicon-32.png": 32,
     }
     for name, px in sizes.items():
-        render_icon(px).save(out / name, optimize=True)
+        render_icon(logo, px).save(out / name, optimize=True)
         print(f"  {out / name} ({px}×{px})")
 
 

@@ -101,6 +101,45 @@
     toastTimer = setTimeout(() => el.remove(), 2800);
   }
 
+  function buildCoconInviteUrl(code) {
+    const url = new URL(location.origin + '/');
+    url.searchParams.set('join', code);
+    return url.toString();
+  }
+
+  function buildCoconInviteMessage(cocon) {
+    const url = buildCoconInviteUrl(cocon.code);
+    return [
+      `Rejoins notre cocon « ${cocon.name} » sur Cocon — notre carnet à deux.`,
+      '',
+      `Lien : ${url}`,
+      `Code : ${cocon.code}`,
+    ].join('\n');
+  }
+
+  async function shareCoconInvite(cocon) {
+    const url = buildCoconInviteUrl(cocon.code);
+    const text = buildCoconInviteMessage(cocon);
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Cocon — ${cocon.name}`,
+          text,
+          url,
+        });
+        return;
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast('Invitation copiée dans le presse-papiers.');
+    } catch {
+      toast('Impossible de partager — copie le code à la main.');
+    }
+  }
+
   // ─── Session (JWT + cocon actif) ─────────────────────────────────
   const session = {
     TOKEN_KEY:  'cocon:token',
@@ -147,13 +186,10 @@
     const welcome = document.querySelector('[data-guest-welcome]');
     if (welcome) welcome.hidden = loggedIn;
 
-    const pillars = document.querySelector('[data-tabbar-pillars]');
-    const guestTab = document.querySelector('[data-tabbar-guest]');
     const tabbar = document.querySelector('[data-tabbar]');
-    if (pillars) pillars.hidden = !loggedIn;
-    if (guestTab) guestTab.hidden = loggedIn;
     if (tabbar) {
-      tabbar.setAttribute('aria-label', loggedIn ? 'Sections principales' : 'Compte');
+      tabbar.hidden = !loggedIn;
+      tabbar.setAttribute('aria-label', 'Sections principales');
     }
 
     if (!loggedIn) {
@@ -259,7 +295,8 @@
         updateAuthUI(true);
         userModal.updateUserDisplay();
         await ensureCoconAfterAuth();
-        if (session.getCoconId()) reloadAllPillars();
+        if (getJoinCodeFromUrl()) await handleJoinFromUrl();
+        else if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
     async submitRegister(form) {
@@ -275,7 +312,8 @@
         updateAuthUI(true);
         userModal.updateUserDisplay();
         await ensureCoconAfterAuth();
-        if (session.getCoconId()) reloadAllPillars();
+        if (getJoinCodeFromUrl()) await handleJoinFromUrl();
+        else if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
     bind() {
@@ -413,7 +451,12 @@
             <p class="cocon-manage-item__name">${escapeHtml(c.name)}</p>
             <p class="cocon-manage-item__meta">${c.member_count} membre${c.member_count > 1 ? 's' : ''} · ${c.role === 'owner' ? 'Créateur' : 'Membre'}</p>
           </div>
-          <span class="cocon-manage-item__code" title="Copier le code">${escapeHtml(c.code)}</span>
+          <div class="cocon-manage-item__invite">
+            <button type="button" class="cocon-manage-item__code" data-copy-cocon-code="${escapeHtml(c.code)}" title="Copier le code">${escapeHtml(c.code)}</button>
+            <button type="button" class="cocon-manage-item__share" data-share-cocon="${c.id}" aria-label="Partager l'invitation à ${escapeHtml(c.name)}">
+              <svg class="icon" aria-hidden="true"><use href="#i-share" /></svg>
+            </button>
+          </div>
         </li>`).join('');
     },
     bind() {
@@ -530,18 +573,35 @@
           this._hideSubForms();
           document.querySelector('#cocon-code').value = '';
           await coconBar.load();
+          clearJoinFromUrl();
           toast(`Bienvenue dans "${cocon.name}" !`);
           reloadAllPillars();
         } catch (err) { this._showCoconError(err.message); }
       });
       // Switch cocon depuis la liste dans la modale
-      document.querySelector('[data-cocon-manage-list]')?.addEventListener('click', (e) => {
-        const item = e.target.closest('[data-switch-cocon]');
-        if (!item) return;
-        if (e.target.classList.contains('cocon-manage-item__code')) {
-          navigator.clipboard?.writeText(e.target.textContent).then(() => toast('Code copié !'));
+      document.querySelector('[data-cocon-manage-list]')?.addEventListener('click', async (e) => {
+        const shareBtn = e.target.closest('[data-share-cocon]');
+        if (shareBtn) {
+          e.stopPropagation();
+          const id = parseInt(shareBtn.dataset.shareCocon, 10);
+          const cocon = this._cocons.find((c) => c.id === id);
+          if (cocon) await shareCoconInvite(cocon);
           return;
         }
+        const copyBtn = e.target.closest('[data-copy-cocon-code]');
+        if (copyBtn) {
+          e.stopPropagation();
+          const code = copyBtn.dataset.copyCoconCode || copyBtn.textContent.trim();
+          try {
+            await navigator.clipboard.writeText(code);
+            toast('Code copié !');
+          } catch {
+            toast('Impossible de copier le code.');
+          }
+          return;
+        }
+        const item = e.target.closest('[data-switch-cocon]');
+        if (!item) return;
         const id = parseInt(item.dataset.switchCocon, 10);
         const picked = this._cocons.find((c) => c.id === id);
         session.setActiveCocon(id, picked?.name);
@@ -707,6 +767,55 @@
       return false;
     }
     return true;
+  }
+
+  function getJoinCodeFromUrl() {
+    const code = new URLSearchParams(location.search).get('join');
+    return code ? code.trim().toUpperCase() : null;
+  }
+
+  function clearJoinFromUrl() {
+    const url = new URL(location.href);
+    if (!url.searchParams.has('join')) return;
+    url.searchParams.delete('join');
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  async function handleJoinFromUrl() {
+    const code = getJoinCodeFromUrl();
+    if (!code) return;
+    if (!session.getToken()) {
+      authModal.open();
+      return;
+    }
+    const ok = await validateSession();
+    if (!ok) {
+      authModal.open();
+      return;
+    }
+    await userModal.loadCocons();
+    userModal.open();
+    userModal.switchTab('cocons');
+    userModal._hideSubForms();
+    const input = document.querySelector('#cocon-code');
+    if (input) input.value = code;
+    if (code.length === 8) {
+      try {
+        const cocon = await api('POST', '/api/cocons/join', { code });
+        session.setActiveCocon(cocon.id, cocon.name);
+        await coconBar.load();
+        userModal._renderCocons();
+        userModal.close();
+        clearJoinFromUrl();
+        toast(`Bienvenue dans « ${cocon.name} » !`);
+        reloadAllPillars();
+        return;
+      } catch (err) {
+        toast(err.message);
+      }
+    }
+    document.querySelector('[data-join-cocon-form]').hidden = false;
+    toast('Code d\'invitation détecté — confirme pour rejoindre.');
   }
 
   async function ensureCoconAfterAuth() {
@@ -1996,10 +2105,12 @@
         }
         coconBar.load().then(() => {
           if (session.getCoconId()) reloadAllPillars();
+          else handleJoinFromUrl();
         });
       });
     } else {
       updateAuthUI(false);
+      if (getJoinCodeFromUrl()) handleJoinFromUrl();
     }
 
     // Thème : géré par window.coconApplyTheme dans index.html (avant app.js)

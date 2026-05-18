@@ -151,6 +151,35 @@ cd /opt/jttof && sudo bash deploy/update.sh
 | `deploy/setup-server.sh` | Première install |
 | `deploy/update.sh` | Mise à jour rapide |
 
+## SSL : ERR_CERT_COMMON_NAME_INVALID sur cocon.sbs
+
+Le certificat doit couvrir **cocon.sbs** et **www.cocon.sbs** :
+
+```bash
+sudo certbot certificates   # Domains: cocon.sbs www.cocon.sbs
+sudo certbot --nginx -d cocon.sbs -d www.cocon.sbs --expand
+sudo certbot install --cert-name www.cocon.sbs
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+Vérification :
+
+```bash
+echo | openssl s_client -connect cocon.sbs:443 -servername cocon.sbs 2>/dev/null \
+  | openssl x509 -noout -ext subjectAltName
+# → DNS:cocon.sbs, DNS:www.cocon.sbs
+```
+
+Si Certbot ne trouve pas le vhost, réappliquer la config du repo :
+
+```bash
+sudo sed "s/COCON_DOMAIN/cocon.sbs/g" /opt/jttof/deploy/nginx-jttof.conf \
+  | sudo tee /etc/nginx/sites-available/jttof
+sudo ln -sf /etc/nginx/sites-available/jttof /etc/nginx/sites-enabled/jttof
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot install --cert-name www.cocon.sbs
+```
+
 ## Dépannage
 
 ```bash
