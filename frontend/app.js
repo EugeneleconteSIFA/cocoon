@@ -133,11 +133,14 @@
     }
     const res = await fetch(path, opts);
 
-    // Session expirée → on déconnecte proprement
-    if (res.status === 401) {
+    // Session expirée (JWT) — pas confondre avec « pas encore connecté »
+    if (res.status === 401 && token) {
       session.clear();
       authModal.open();
       throw new Error('Session expirée, reconnecte-toi.');
+    }
+    if (res.status === 401 && !token) {
+      throw new Error('Connecte-toi pour continuer.');
     }
 
     if (!res.ok) {
