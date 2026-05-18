@@ -95,7 +95,12 @@
   }
 
   async function api(method, path, body) {
-    const opts = { method, headers: { Accept: 'application/json' } };
+    const opts = {
+      method,
+      headers: { Accept: 'application/json' },
+      // Requis derrière Basic Auth Nginx (VPS sans domaine)
+      credentials: 'same-origin',
+    };
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);

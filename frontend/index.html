@@ -8,6 +8,7 @@
   <title>Cocon — notre carnet à deux</title>
 
   <!-- PWA -->
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -381,15 +382,18 @@
   </div>
 
   <script src="/app.js" defer></script>
-  <!-- Enregistrement du Service Worker (PWA) -->
+  <!-- PWA : SW uniquement en local ou HTTPS (incompatible avec Basic Auth sur IP HTTP) -->
   <script>
-    if ('serviceWorker' in navigator) {
+    (function () {
+      var host = location.hostname;
+      var ok = host === 'localhost' || host === '127.0.0.1' || location.protocol === 'https:';
+      if (!ok || !('serviceWorker' in navigator)) return;
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('/sw.js').catch(function (err) {
           console.warn('SW registration failed:', err);
         });
       });
-    }
+    })();
   </script>
 </body>
 </html>

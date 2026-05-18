@@ -48,7 +48,7 @@ self.addEventListener('fetch', (event) => {
   // API → network-first (avec fallback silencieux si hors ligne)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(request).catch(() =>
+      fetch(request, { credentials: 'same-origin' }).catch(() =>
         new Response(JSON.stringify({ error: 'hors ligne' }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' },
@@ -65,7 +65,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
-      return fetch(request).then((response) => {
+      return fetch(request, { credentials: 'same-origin' }).then((response) => {
         if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
