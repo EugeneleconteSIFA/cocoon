@@ -310,7 +310,7 @@
     },
 
     async open() {
-      if (!session.isLoggedIn()) { authModal.open(); return; }
+      if (!session.getToken()) { authModal.open(); return; }
       document.querySelector('[data-user-backdrop]').hidden = false;
       document.querySelector('[data-user-modal]').hidden = false;
       document.body.style.overflow = 'hidden';
@@ -360,7 +360,12 @@
       document.querySelector('[data-action="close-user"]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-user-backdrop]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-action="open-user"]')?.addEventListener('click', async () => {
-        if (!session.isLoggedIn()) {
+        if (!session.getToken()) {
+          authModal.open();
+          return;
+        }
+        const ok = await validateSession();
+        if (!ok) {
           authModal.open();
           return;
         }
@@ -588,8 +593,18 @@
       });
       document.querySelector('[data-action="new-cocon"]')?.addEventListener('click', async () => {
         this.closeMenu();
+        if (!session.getToken()) {
+          authModal.open();
+          return;
+        }
+        const ok = await validateSession();
+        if (!ok) {
+          authModal.open();
+          return;
+        }
+        await userModal.open();
         await userModal.loadCocons();
-        userModal.open();
+        userModal._renderCocons();
         document.querySelector('[data-create-cocon-form]').hidden = false;
       });
       document.addEventListener('click', (e) => {
@@ -605,13 +620,14 @@
 
   // ─── Cocon actif requis pour les piliers ─────────────────────────
   function requireCocon() {
-    if (!session.isLoggedIn()) {
+    if (!session.getToken()) {
       authModal.open();
       return false;
     }
     if (!session.getCoconId()) {
       toast('Crée ou rejoins un cocon pour commencer.');
-      userModal.open();
+      if (session.getToken()) userModal.open();
+      else authModal.open();
       return false;
     }
     return true;
