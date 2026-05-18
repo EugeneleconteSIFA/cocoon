@@ -23,7 +23,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/style.css?v=3" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -38,10 +38,13 @@
     (function () {
       var saved = localStorage.getItem('cocon:theme');
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var root = document.documentElement;
       if (saved === 'dark' || (!saved && prefersDark)) {
-        document.documentElement.classList.add('dark');
+        root.classList.add('dark');
+        root.classList.remove('light');
       } else {
-        document.documentElement.classList.add('light');
+        root.classList.add('light');
+        root.classList.remove('dark');
       }
     })();
   </script>
@@ -136,36 +139,26 @@
     <!-- ─── Header ──────────────────────────────────────────────── -->
     <header class="topbar" role="banner">
       <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
-        <img class="logo__img" src="/icons/logo.jpg" alt="" width="44" height="44" decoding="async" />
+        <img class="logo__img" src="/icons/logo.jpg?v=2" alt="" width="44" height="44" decoding="async" />
       </a>
-      <div class="topbar__end">
-        <div class="cocon-select" data-cocon-select hidden>
+      <div class="topbar__actions">
+        <div class="cocon-switcher" data-cocon-select hidden>
           <button
-            class="cocon-select__trigger"
+            class="cocon-switcher__name"
             type="button"
             data-cocon-trigger
             aria-haspopup="listbox"
             aria-expanded="false"
             aria-controls="cocon-select-menu"
           >
-            <span class="cocon-select__label" data-cocon-label>Mon cocon</span>
-            <svg class="cocon-select__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
+            <span data-cocon-label>Mon cocon</span>
           </button>
-          <div class="cocon-select__menu" id="cocon-select-menu" data-cocon-menu hidden role="listbox" aria-label="Mes cocons">
-            <ul class="cocon-select__list" data-cocon-list></ul>
-            <div class="cocon-select__footer">
-              <button class="cocon-select__new" type="button" data-action="new-cocon">
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
-                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Nouveau cocon
-              </button>
-            </div>
+          <div class="cocon-switcher__menu" id="cocon-select-menu" data-cocon-menu hidden role="listbox" aria-label="Autres cocons">
+            <p class="cocon-switcher__menu-title">Changer de cocon</p>
+            <ul class="cocon-switcher__list" data-cocon-list></ul>
+            <button class="cocon-switcher__new" type="button" data-action="new-cocon">+ Nouveau cocon</button>
           </div>
         </div>
-        <div class="topbar__tools">
         <button class="icon-button" type="button" data-action="open-user" aria-label="Mon compte" data-user-btn>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="8" r="4"/>
@@ -189,7 +182,6 @@
         <button class="icon-button" type="button" data-action="header-search" aria-label="Qu'est-ce qu'on cherche ?">
           <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
         </button>
-        </div>
       </div>
     </header>
 
@@ -541,7 +533,7 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=5" defer></script>
+  <script src="/app.js?v=7" defer></script>
   <!-- PWA : SW uniquement en local ou HTTPS (incompatible avec Basic Auth sur IP HTTP) -->
   <script>
     (function () {

@@ -530,12 +530,12 @@
         this.hide();
         return;
       }
+      if (this._els?.root) this._els.root.hidden = false;
       try { this._cocons = await api('GET', '/api/cocons'); } catch { return; }
       if (!session.getCoconId() && this._cocons.length) {
         session.setActiveCocon(this._cocons[0].id);
       }
       this._render();
-      if (this._els?.root) this._els.root.hidden = false;
     },
 
     hide() {
@@ -555,19 +555,26 @@
           || (this._cocons.length ? 'Choisir…' : 'Mon cocon');
       }
       if (!this._els?.list) return;
+      const others = this._cocons.filter((c) => c.id !== activeId);
       if (!this._cocons.length) {
         this._els.list.innerHTML = `
-          <li class="cocon-select__empty" role="presentation">
-            <p>Aucun cocon pour l'instant.</p>
+          <li class="cocon-switcher__empty" role="presentation">
+            Crée ton premier cocon ci-dessous
           </li>`;
         return;
       }
-      this._els.list.innerHTML = this._cocons.map((c) => `
+      if (!others.length) {
+        this._els.list.innerHTML = `
+          <li class="cocon-switcher__empty" role="presentation">
+            Pas d'autre cocon pour l'instant
+          </li>`;
+        return;
+      }
+      this._els.list.innerHTML = others.map((c) => `
         <li role="presentation">
-          <button type="button" class="cocon-select__option${c.id === activeId ? ' is-active' : ''}"
-            data-cocon-switch="${c.id}" role="option" aria-selected="${c.id === activeId}">
-            <span class="cocon-select__option-name">${escapeHtml(c.name)}</span>
-            ${c.id === activeId ? '<span class="cocon-select__check" aria-hidden="true">✓</span>' : ''}
+          <button type="button" class="cocon-switcher__option"
+            data-cocon-switch="${c.id}" role="option">
+            ${escapeHtml(c.name)}
           </button>
         </li>`).join('');
     },
@@ -1925,8 +1932,13 @@
     document.querySelector('[data-action="toggle-theme"]')?.addEventListener('click', () => {
       const html = document.documentElement;
       const goingDark = !html.classList.contains('dark');
-      html.classList.toggle('dark', goingDark);
-      html.classList.toggle('light', !goingDark);
+      if (goingDark) {
+        html.classList.add('dark');
+        html.classList.remove('light');
+      } else {
+        html.classList.remove('dark');
+        html.classList.add('light');
+      }
       localStorage.setItem('cocon:theme', goingDark ? 'dark' : 'light');
       const meta = document.querySelector('meta[name="theme-color"]');
       if (meta) meta.content = goingDark ? '#1E1318' : '#B86578';
