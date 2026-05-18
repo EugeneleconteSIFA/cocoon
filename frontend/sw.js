@@ -1,13 +1,12 @@
 /* ════════════════════════════════════════════════════════════════
  *  COCON — Service Worker
- *  Stratégie : cache-first pour le shell (HTML/CSS/JS/icons),
- *              network-first pour les appels API (/api/*).
+ *  Shell (HTML/JS/CSS/SW) → réseau uniquement.
+ *  Icônes / manifest → cache pour offline.
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v9';
+const CACHE_NAME = 'cocon-v10';
 
-const SHELL_ASSETS = [
-  '/style.css',
+const OFFLINE_ASSETS = [
   '/manifest.json',
   '/icons/favicon-32.png',
   '/icons/icon-192.png',
@@ -15,42 +14,45 @@ const SHELL_ASSETS = [
   '/icons/apple-touch-icon.png',
 ];
 
-/* ─── Install : précharge le shell ─────────────────────────────── */
+function isShellPath(pathname) {
+  return (
+    pathname === '/' ||
+    pathname === '/index.html' ||
+    pathname === '/app.js' ||
+    pathname === '/style.css' ||
+    pathname === '/sw.js'
+  );
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_ASSETS))
   );
   self.skipWaiting();
 });
 
-/* ─── Activate : nettoie les anciens caches ─────────────────────── */
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-      )
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-/* ─── Fetch : routing des requêtes ─────────────────────────────── */
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
-
-  // Ignore les requêtes non-GET et les extensions Chrome
   if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
   if (!url.protocol.startsWith('http')) return;
 
-  // JS / HTML → toujours le réseau (évite un app.js obsolète en cache)
-  if (url.pathname === '/app.js' || url.pathname === '/style.css' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  // Shell : jamais de cache (évite une UI figée après deploy)
+  if (isShellPath(url.pathname)) {
     event.respondWith(fetch(request, { cache: 'no-store', credentials: 'same-origin' }));
     return;
   }
 
-  // API → network-first (avec fallback silencieux si hors ligne)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request, { credentials: 'same-origin' }).catch(() =>
@@ -63,10 +65,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Google Fonts / ressources externes → network only (pas de mise en cache)
   if (!url.origin.includes(self.location.origin)) return;
 
-  // Shell assets → cache-first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;

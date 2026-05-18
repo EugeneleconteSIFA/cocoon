@@ -23,7 +23,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=7" />
+  <link rel="stylesheet" href="/style.css?v=8" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -625,15 +625,40 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=11" defer></script>
-  <!-- PWA : SW uniquement en local ou HTTPS (incompatible avec Basic Auth sur IP HTTP) -->
+  <script src="/app.js?v=12" defer></script>
+  <!-- PWA : SW uniquement en local ou HTTPS -->
   <script>
     (function () {
       var host = location.hostname;
       var ok = host === 'localhost' || host === '127.0.0.1' || location.protocol === 'https:';
       if (!ok || !('serviceWorker' in navigator)) return;
+
+      var SW_MIGRATE_KEY = 'cocon:sw-migrate-v10';
+
+      function clearLegacyCaches() {
+        if (!('caches' in window)) return Promise.resolve();
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }
+
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/sw.js').catch(function (err) {
+        var migrated = false;
+        try { migrated = localStorage.getItem(SW_MIGRATE_KEY) === '1'; } catch (_e) { /* ignore */ }
+
+        var setup = migrated
+          ? Promise.resolve()
+          : navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }).then(clearLegacyCaches).then(function () {
+              try { localStorage.setItem(SW_MIGRATE_KEY, '1'); } catch (_e) { /* ignore */ }
+            });
+
+        setup.then(function () {
+          return navigator.serviceWorker.register('/sw.js?v=10');
+        }).then(function () {
+          if (!migrated) location.reload();
+        }).catch(function (err) {
           console.warn('SW registration failed:', err);
         });
       });

@@ -17,6 +17,9 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.responses import Response
 
 from .database import init_db
 from .routers import activites, cuisine, culture, lieux, search, auth as auth_router, cocons as cocons_router
@@ -55,6 +58,22 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class _NoCacheShellMiddleware(BaseHTTPMiddleware):
+    """Empêche navigateur + CDN de figer index.html / app.js / style.css / sw.js."""
+
+    _SHELL = frozenset({"/", "/index.html", "/app.js", "/style.css", "/sw.js"})
+
+    async def dispatch(self, request: Request, call_next) -> Response:
+        response = await call_next(request)
+        if request.url.path in self._SHELL:
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+        return response
+
+
+app.add_middleware(_NoCacheShellMiddleware)
 
 # ─── Routers API ──────────────────────────────────────────────────
 app.include_router(auth_router.router)
