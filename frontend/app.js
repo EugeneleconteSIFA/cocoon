@@ -588,6 +588,7 @@
     },
 
     async load() {
+      if (!session.isLoggedIn() || !session.getCoconId()) return;
       try {
         this.items = await api('GET', '/api/culture');
         this.render();
@@ -845,6 +846,7 @@
     },
 
     async load() {
+      if (!session.isLoggedIn() || !session.getCoconId()) return;
       try {
         this.items = await api('GET', '/api/lieux');
         this.render();
@@ -1103,6 +1105,7 @@
     },
 
     async load() {
+      if (!session.isLoggedIn() || !session.getCoconId()) return;
       try {
         this.items = await api('GET', '/api/activites');
         this.render();
@@ -1323,6 +1326,7 @@
     },
 
     async load() {
+      if (!session.isLoggedIn() || !session.getCoconId()) return;
       try {
         this.items = await api('GET', '/api/cuisine');
         this.render();
