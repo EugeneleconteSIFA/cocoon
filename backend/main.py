@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .database import init_db
-from .routers import activites, cuisine, culture, lieux, search
+from .routers import activites, cuisine, culture, lieux, search, auth as auth_router, cocons as cocons_router
 
 
 @asynccontextmanager
@@ -57,6 +57,8 @@ app.add_middleware(
 )
 
 # ─── Routers API ──────────────────────────────────────────────────
+app.include_router(auth_router.router)
+app.include_router(cocons_router.router)
 app.include_router(culture.router)
 app.include_router(lieux.router)
 app.include_router(activites.router)

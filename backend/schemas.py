@@ -20,6 +20,52 @@ class _ORMBase(BaseModel):
 
 
 # ───────────────────────────────────────────────────────────────────
+# Auth & Cocons
+# ───────────────────────────────────────────────────────────────────
+
+
+class UserCreate(_ORMBase):
+    email: str
+    password: str = Field(..., min_length=6)
+    display_name: str
+
+
+class UserRead(_ORMBase):
+    id: int
+    email: str
+    display_name: str
+    created_at: str
+
+
+class UserUpdate(_ORMBase):
+    display_name: str | None = None
+    password: str | None = Field(default=None, min_length=6)
+
+
+class CoconRead(_ORMBase):
+    id: int
+    name: str
+    code: str
+    role: str
+    member_count: int
+    created_at: str | None = None
+
+
+class CoconCreate(_ORMBase):
+    name: str = Field(..., min_length=1, max_length=50)
+
+
+class CoconJoin(_ORMBase):
+    code: str = Field(..., min_length=8, max_length=8)
+
+
+class TokenResponse(_ORMBase):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserRead
+
+
+# ───────────────────────────────────────────────────────────────────
 # 1. Culture
 # ───────────────────────────────────────────────────────────────────
 

@@ -1,14 +1,14 @@
-"""Modèles SQLAlchemy pour les 4 piliers de Cocon.
+"""Modèles SQLAlchemy pour Cocon.
 
-Convention : tous les modèles héritent d'un mixin `CocoonMixin` qui ajoute
-les champs partagés (id, note libre, aimé, archivé, date de création).
+Convention : les modèles de piliers héritent de CocoonMixin (id, note, loved,
+archived, created_at) et possèdent tous un `cocon_id` lié au Cocon propriétaire.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, Boolean, Float, Integer, String, Text
+from sqlalchemy import JSON, Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -19,10 +19,45 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+# ─── Auth & Multi-cocon ────────────────────────────────────────────
+
+class User(Base):
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    display_name: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[str] = mapped_column(String, default=_now_iso, nullable=False)
+
+
+class Cocon(Base):
+    __tablename__ = "cocons"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    code: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+    created_by: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[str] = mapped_column(String, default=_now_iso, nullable=False)
+
+
+class CoconMember(Base):
+    __tablename__ = "cocon_members"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cocon_id: Mapped[int] = mapped_column(Integer, ForeignKey("cocons.id"), index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    role: Mapped[str] = mapped_column(String, default="member", nullable=False)
+    joined_at: Mapped[str] = mapped_column(String, default=_now_iso, nullable=False)
+
+
+# ─── Mixin commun aux 4 piliers ────────────────────────────────────
+
 class CocoonMixin:
     """Champs communs à toutes les entrées du carnet."""
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cocon_id: Mapped[int] = mapped_column(Integer, ForeignKey("cocons.id"), nullable=False, index=True)
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
     loved: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -30,6 +65,7 @@ class CocoonMixin:
 
 
 # ─── 1. Culture (films & séries) ───────────────────────────────────
+
 class Culture(CocoonMixin, Base):
     __tablename__ = "culture"
 
@@ -46,6 +82,7 @@ class Culture(CocoonMixin, Base):
 
 
 # ─── 2. Lieux ──────────────────────────────────────────────────────
+
 class Lieu(CocoonMixin, Base):
     __tablename__ = "lieux"
 
@@ -63,6 +100,7 @@ class Lieu(CocoonMixin, Base):
 
 
 # ─── 3. Activités ──────────────────────────────────────────────────
+
 class Activite(CocoonMixin, Base):
     __tablename__ = "activites"
 
@@ -73,6 +111,7 @@ class Activite(CocoonMixin, Base):
 
 
 # ─── 4. Cuisine (recettes) ─────────────────────────────────────────
+
 class Recette(CocoonMixin, Base):
     __tablename__ = "cuisine"
 

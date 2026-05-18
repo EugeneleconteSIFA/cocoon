@@ -52,8 +52,16 @@ def get_db():
 
 # ─── Init au démarrage ─────────────────────────────────────────────
 def init_db() -> None:
-    """Crée les tables si elles n'existent pas. Idempotent."""
+    """Crée les tables si elles n'existent pas.
+
+    Si la variable d'environnement RESET_DB=1 est définie, toutes les
+    tables existantes sont supprimées avant d'être recréées (utile pour
+    repartir d'un schéma propre après une migration cassante).
+    """
     # Import tardif pour éviter les imports circulaires
     from . import models  # noqa: F401
+
+    if os.getenv("RESET_DB", "0").strip() == "1":
+        Base.metadata.drop_all(bind=engine)
 
     Base.metadata.create_all(bind=engine)

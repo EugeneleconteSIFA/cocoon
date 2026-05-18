@@ -169,6 +169,271 @@
     return res.json();
   }
 
+  // ─── Modale Auth (login / register) ─────────────────────────────
+  const authModal = {
+    open() {
+      document.querySelector('[data-auth-backdrop]').hidden = false;
+      document.querySelector('[data-auth-modal]').hidden = false;
+      document.body.style.overflow = 'hidden';
+      this._clearErrors();
+    },
+    close() {
+      document.querySelector('[data-auth-backdrop]').hidden = true;
+      document.querySelector('[data-auth-modal]').hidden = true;
+      document.body.style.overflow = '';
+    },
+    _clearErrors() {
+      document.querySelectorAll('[data-auth-error]').forEach(el => { el.hidden = true; el.textContent = ''; });
+    },
+    _showError(msg) {
+      const activeForm = document.querySelector('[data-auth-form]:not([hidden])');
+      const err = activeForm?.querySelector('[data-auth-error]');
+      if (err) { err.textContent = msg; err.hidden = false; }
+    },
+    switchTab(tab) {
+      document.querySelectorAll('[data-auth-tab]').forEach(btn => btn.classList.toggle('is-active', btn.dataset.authTab === tab));
+      document.querySelectorAll('[data-auth-form]').forEach(form => { form.hidden = form.dataset.authForm !== tab; });
+      this._clearErrors();
+    },
+    async submitLogin(form) {
+      const email = form.querySelector('#login-email').value.trim();
+      const password = form.querySelector('#login-password').value;
+      try {
+        const data = await apiForm('/api/auth/login', { username: email, password });
+        session.save(data.access_token, data.user);
+        this.close();
+        await coconBar.load();
+        userModal.updateUserDisplay();
+        if (session.getCoconId()) reloadAllPillars();
+      } catch (e) { this._showError(e.message); }
+    },
+    async submitRegister(form) {
+      const name = form.querySelector('#reg-name').value.trim();
+      const email = form.querySelector('#reg-email').value.trim();
+      const password = form.querySelector('#reg-password').value;
+      try {
+        const data = await api('POST', '/api/auth/register', { email, password, display_name: name });
+        session.save(data.access_token, data.user);
+        this.close();
+        await coconBar.load();
+        userModal.updateUserDisplay();
+      } catch (e) { this._showError(e.message); }
+    },
+    bind() {
+      document.querySelectorAll('[data-auth-tab]').forEach(btn => {
+        btn.addEventListener('click', () => this.switchTab(btn.dataset.authTab));
+      });
+      document.querySelector('[data-action="close-auth"]')?.addEventListener('click', () => this.close());
+      document.querySelector('[data-auth-backdrop]')?.addEventListener('click', () => this.close());
+      document.querySelector('[data-auth-form="login"]')?.addEventListener('submit', async (e) => {
+        e.preventDefault(); await this.submitLogin(e.target);
+      });
+      document.querySelector('[data-auth-form="register"]')?.addEventListener('submit', async (e) => {
+        e.preventDefault(); await this.submitRegister(e.target);
+      });
+    },
+  };
+
+  // ─── Modale Profil + gestion Cocons ──────────────────────────────
+  const userModal = {
+    _cocons: [],
+
+    updateUserDisplay() {
+      const user = session.getUser();
+      if (!user) return;
+      const el = document.querySelector('[data-user-display-name]');
+      if (el) el.textContent = user.display_name || 'Mon compte';
+      const nameInput = document.querySelector('[data-profile-name]');
+      if (nameInput) nameInput.value = user.display_name || '';
+    },
+
+    open() {
+      if (!session.isLoggedIn()) { authModal.open(); return; }
+      this.updateUserDisplay();
+      this._renderCocons();
+      document.querySelector('[data-user-backdrop]').hidden = false;
+      document.querySelector('[data-user-modal]').hidden = false;
+      document.body.style.overflow = 'hidden';
+    },
+    close() {
+      document.querySelector('[data-user-backdrop]').hidden = true;
+      document.querySelector('[data-user-modal]').hidden = true;
+      document.body.style.overflow = '';
+      this._hideSubForms();
+    },
+    _hideSubForms() {
+      document.querySelector('[data-create-cocon-form]').hidden = true;
+      document.querySelector('[data-join-cocon-form]').hidden = true;
+      const err = document.querySelector('[data-cocon-error]');
+      if (err) { err.hidden = true; err.textContent = ''; }
+    },
+    _showCoconError(msg) {
+      const err = document.querySelector('[data-cocon-error]');
+      if (err) { err.textContent = msg; err.hidden = false; }
+    },
+    async loadCocons() {
+      try { this._cocons = await api('GET', '/api/cocons'); } catch { this._cocons = []; }
+    },
+    _renderCocons() {
+      const list = document.querySelector('[data-cocon-manage-list]');
+      if (!list) return;
+      const activeId = session.getCoconId();
+      if (!this._cocons.length) {
+        list.innerHTML = '<li style="font-size:13px;color:var(--ink-faint);font-style:italic;padding:4px 0">Aucun cocon pour l\'instant.</li>';
+        return;
+      }
+      list.innerHTML = this._cocons.map(c => `
+        <li class="cocon-manage-item${c.id === activeId ? ' is-active' : ''}" data-switch-cocon="${c.id}">
+          <div>
+            <p class="cocon-manage-item__name">${escapeHtml(c.name)}</p>
+            <p class="cocon-manage-item__meta">${c.member_count} membre${c.member_count > 1 ? 's' : ''} · ${c.role === 'owner' ? 'Créateur' : 'Membre'}</p>
+          </div>
+          <span class="cocon-manage-item__code" title="Copier le code">${escapeHtml(c.code)}</span>
+        </li>`).join('');
+    },
+    bind() {
+      document.querySelector('[data-action="close-user"]')?.addEventListener('click', () => this.close());
+      document.querySelector('[data-user-backdrop]')?.addEventListener('click', () => this.close());
+      document.querySelector('[data-action="open-user"]')?.addEventListener('click', async () => {
+        await this.loadCocons();
+        this.open();
+      });
+      // Profil
+      document.querySelector('[data-profile-form]')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.querySelector('[data-profile-name]').value.trim();
+        if (!name) return;
+        try {
+          const user = await api('PATCH', '/api/auth/me', { display_name: name });
+          session.save(session.getToken(), user);
+          this.updateUserDisplay();
+          toast('C\'est gardé.');
+        } catch (err) { toast(err.message); }
+      });
+      // Déconnexion
+      document.querySelector('[data-action="logout"]')?.addEventListener('click', () => {
+        session.clear();
+        this.close();
+        coconBar.hide();
+        toast('À bientôt !');
+        culture.items = []; culture.render();
+        lieux.items = []; lieux.render();
+        activites.items = []; activites.render();
+        cuisine.items = []; cuisine.render();
+      });
+      // Créer cocon
+      document.querySelector('[data-action="create-cocon"]')?.addEventListener('click', () => {
+        this._hideSubForms();
+        document.querySelector('[data-create-cocon-form]').hidden = false;
+      });
+      document.querySelector('[data-action="join-cocon"]')?.addEventListener('click', () => {
+        this._hideSubForms();
+        document.querySelector('[data-join-cocon-form]').hidden = false;
+      });
+      document.querySelectorAll('[data-action="cancel-cocon-form"]').forEach(btn => {
+        btn.addEventListener('click', () => this._hideSubForms());
+      });
+      document.querySelector('[data-create-cocon-form]')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.querySelector('#cocon-name').value.trim();
+        if (!name) return;
+        try {
+          const cocon = await api('POST', '/api/cocons', { name });
+          session.setActiveCocon(cocon.id);
+          this._cocons.push(cocon);
+          this._renderCocons();
+          this._hideSubForms();
+          document.querySelector('#cocon-name').value = '';
+          await coconBar.load();
+          toast(`"${cocon.name}" créé ! Code : ${cocon.code}`);
+          reloadAllPillars();
+        } catch (err) { this._showCoconError(err.message); }
+      });
+      document.querySelector('[data-join-cocon-form]')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const code = document.querySelector('#cocon-code').value.trim().toUpperCase();
+        if (code.length !== 8) { this._showCoconError('Le code fait 8 caractères.'); return; }
+        try {
+          const cocon = await api('POST', '/api/cocons/join', { code });
+          session.setActiveCocon(cocon.id);
+          this._cocons.push(cocon);
+          this._renderCocons();
+          this._hideSubForms();
+          document.querySelector('#cocon-code').value = '';
+          await coconBar.load();
+          toast(`Bienvenue dans "${cocon.name}" !`);
+          reloadAllPillars();
+        } catch (err) { this._showCoconError(err.message); }
+      });
+      // Switch cocon depuis la liste dans la modale
+      document.querySelector('[data-cocon-manage-list]')?.addEventListener('click', (e) => {
+        const item = e.target.closest('[data-switch-cocon]');
+        if (!item) return;
+        if (e.target.classList.contains('cocon-manage-item__code')) {
+          navigator.clipboard?.writeText(e.target.textContent).then(() => toast('Code copié !'));
+          return;
+        }
+        const id = parseInt(item.dataset.switchCocon, 10);
+        session.setActiveCocon(id);
+        this._renderCocons();
+        coconBar.setActive(id);
+        this.close();
+        reloadAllPillars();
+      });
+    },
+  };
+
+  // ─── Bandeau cocon (sous la topbar) ──────────────────────────────
+  const coconBar = {
+    _cocons: [],
+    async load() {
+      if (!session.isLoggedIn()) return;
+      try { this._cocons = await api('GET', '/api/cocons'); } catch { return; }
+      if (!session.getCoconId() && this._cocons.length) {
+        session.setActiveCocon(this._cocons[0].id);
+      }
+      this._render();
+      document.querySelector('[data-cocon-bar]').hidden = !this._cocons.length;
+    },
+    hide() { document.querySelector('[data-cocon-bar]').hidden = true; },
+    setActive(id) { this._render(); },
+    _render() {
+      const list = document.querySelector('[data-cocon-list]');
+      if (!list) return;
+      const activeId = session.getCoconId();
+      list.innerHTML = this._cocons.map(c => `
+        <button class="cocon-pill${c.id === activeId ? ' is-active' : ''}"
+          type="button" data-cocon-switch="${c.id}" role="listitem">
+          ${escapeHtml(c.name)}
+        </button>`).join('');
+    },
+    bind() {
+      document.querySelector('[data-cocon-list]')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-cocon-switch]');
+        if (!btn) return;
+        const id = parseInt(btn.dataset.coconSwitch, 10);
+        if (id === session.getCoconId()) return;
+        session.setActiveCocon(id);
+        this._render();
+        reloadAllPillars();
+      });
+      document.querySelector('[data-action="new-cocon"]')?.addEventListener('click', async () => {
+        await userModal.loadCocons();
+        userModal.open();
+        document.querySelector('[data-create-cocon-form]').hidden = false;
+      });
+    },
+  };
+
+  // ─── Recharge tous les piliers quand le cocon change ─────────────
+  function reloadAllPillars() {
+    if (!session.getCoconId()) return;
+    culture.load();
+    lieux.load();
+    activites.load();
+    cuisine.load();
+  }
+
   // ─── UI partagée (sheet + shuffle) ───────────────────────────────
   const ui = {
     sheetOwner: null,
@@ -1390,10 +1655,8 @@
     ui.closeSheet();
     ui.closeShuffle();
     showTab(readInitialTab());
-    culture.load();
-    lieux.load();
-    activites.load();
-    cuisine.load();
+    // Les piliers ne se chargent que si connecté et cocon actif
+    // (reloadAllPillars() est appelé après coconBar.load() plus bas)
     document.querySelector('.app')?.addEventListener('click', (e) => {
       const link = e.target.closest('a[href^="#"]');
       if (!link) return;
@@ -1407,6 +1670,18 @@
     document.querySelector('[data-action="header-search"]')?.addEventListener('click', () => {
       openAddForTab(currentTab());
     });
+
+    // ─── Auth, Profil & Cocon ────────────────────────────────────
+    authModal.bind();
+    userModal.bind();
+    coconBar.bind();
+
+    // Si déjà connecté au démarrage, charger le bandeau + les piliers
+    if (session.isLoggedIn()) {
+      coconBar.load().then(() => {
+        if (session.getCoconId()) reloadAllPillars();
+      });
+    }
 
     // ─── Toggle dark mode ────────────────────────────────────────
     document.querySelector('[data-action="toggle-theme"]')?.addEventListener('click', () => {
