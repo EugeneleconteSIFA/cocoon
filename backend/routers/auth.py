@@ -12,6 +12,30 @@ from ..database import get_db
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
+def _sync_display_name(user: models.User) -> None:
+    """Nom affiché = prénom + nom si renseignés."""
+    parts = [user.first_name or "", user.last_name or ""]
+    full = " ".join(p.strip() for p in parts if p.strip())
+    if full:
+        user.display_name = full
+
+
+def _apply_user_update(user: models.User, payload: schemas.UserUpdate) -> None:
+    data = payload.model_dump(exclude_unset=True)
+    password = data.pop("password", None)
+    for key, value in data.items():
+        if key == "birth_date":
+            if not value:
+                value = None
+            elif len(value) != 10 or value[4] != "-" or value[7] != "-":
+                raise HTTPException(status_code=422, detail="Date de naissance invalide (AAAA-MM-JJ)")
+        setattr(user, key, value)
+    if password is not None:
+        user.hashed_password = auth.hash_password(password)
+    if "display_name" not in data:
+        _sync_display_name(user)
+
+
 @router.post(
     "/register",
     response_model=schemas.TokenResponse,
@@ -28,12 +52,17 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     user = models.User(
         email=payload.email,
         hashed_password=auth.hash_password(payload.password),
-        display_name=payload.display_name or payload.email.split('@')[0],
+        first_name=payload.first_name,
+        last_name=payload.last_name,
+        display_name=payload.display_name or payload.email.split("@")[0],
     )
+    _sync_display_name(user)
+    if not user.display_name:
+        user.display_name = payload.email.split("@")[0]
     db.add(user)
     db.commit()
     db.refresh(user)
-    token = auth.create_access_token({"sub": str(user.id)})
+    token = auth.create_access_token({"sub": user.id})
     return schemas.TokenResponse(
         access_token=token,
         user=schemas.UserRead.model_validate(user),
@@ -53,7 +82,7 @@ def login(
             detail="Email ou mot de passe incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = auth.create_access_token({"sub": str(user.id)})
+    token = auth.create_access_token({"sub": user.id})
     return schemas.TokenResponse(
         access_token=token,
         user=schemas.UserRead.model_validate(user),
@@ -72,11 +101,8 @@ def update_me(
     current_user: models.User = Depends(auth.get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Modifier le profil (display_name et/ou password)."""
-    if payload.display_name is not None:
-        current_user.display_name = payload.display_name
-    if payload.password is not None:
-        current_user.hashed_password = auth.hash_password(payload.password)
+    """Modifier le profil (identité, date de naissance, mot de passe)."""
+    _apply_user_update(current_user, payload)
     db.commit()
     db.refresh(current_user)
     return current_user

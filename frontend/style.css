@@ -134,6 +134,21 @@ body {
   opacity: 0.55;
 }
 
+.topbar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+  min-width: 0;
+}
+
+.topbar__tools {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
 /* ─── 5. Icon button (générique, ghost) ────────────────────────── */
 .icon-button {
   display: inline-flex;
@@ -1034,58 +1049,160 @@ body {
   }
 }
 
-/* ─── 14. Bandeau cocon (sous la topbar) ───────────────────────── */
-.cocon-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-5);
-  background: var(--ivory);
-  border-bottom: 1px solid rgba(201, 152, 120, 0.2);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-}
-.cocon-bar::-webkit-scrollbar { display: none; }
-
-.cocon-bar__inner {
-  display: flex;
-  gap: var(--space-2);
-  flex: 1;
+/* ─── 14. Sélecteur cocon (topbar, liste déroulante) ───────────── */
+.cocon-select {
+  position: relative;
   min-width: 0;
+  max-width: min(42vw, 168px);
 }
 
-.cocon-bar__add {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  color: var(--ink-soft);
-}
-
-.cocon-pill {
+.cocon-select__trigger {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 5px var(--space-3);
+  max-width: 100%;
+  height: 36px;
+  padding: 0 var(--space-3);
   border-radius: var(--radius-pill);
   border: 1px solid rgba(201, 152, 120, 0.35);
-  background: var(--paper);
+  background: var(--ivory);
   font-family: 'Lora', serif;
   font-size: 13px;
   font-weight: 600;
-  color: var(--ink-soft);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: all var(--t) var(--ease);
-}
-.cocon-pill.is-active {
-  background: var(--peony);
-  border-color: var(--peony);
-  color: var(--ivory);
-}
-.cocon-pill:hover:not(.is-active) {
-  border-color: var(--copper);
   color: var(--ink);
+  cursor: pointer;
+  transition: background-color var(--t) var(--ease), border-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+
+.cocon-select__trigger:hover,
+.cocon-select__trigger[aria-expanded="true"] {
+  border-color: var(--copper);
+  background: var(--paper);
+  color: var(--peony);
+}
+
+.cocon-select__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cocon-select__chevron {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--ink-soft);
+  transition: transform var(--t) var(--ease);
+}
+
+.cocon-select__trigger[aria-expanded="true"] .cocon-select__chevron {
+  transform: rotate(180deg);
+}
+
+.cocon-select__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: max(220px, 100%);
+  max-width: min(92vw, 280px);
+  background: var(--paper);
+  border: 1px solid rgba(201, 152, 120, 0.3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+  animation: fade-in 160ms var(--ease) both;
+}
+
+.cocon-select__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2) 0;
+  max-height: min(50dvh, 240px);
+  overflow-y: auto;
+}
+
+.cocon-select__empty {
+  padding: var(--space-3) var(--space-4);
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+.cocon-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  border: none;
+  background: transparent;
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--t) var(--ease);
+}
+
+.cocon-select__option:hover {
+  background: var(--ivory);
+}
+
+.cocon-select__option.is-active {
+  color: var(--peony);
+  font-weight: 600;
+}
+
+.cocon-select__option-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.cocon-select__check {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--peony);
+}
+
+.cocon-select__footer {
+  border-top: 1px solid rgba(201, 152, 120, 0.22);
+  padding: var(--space-2);
+}
+
+.cocon-select__new {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--peony);
+  transition: background-color var(--t) var(--ease);
+}
+
+.cocon-select__new:hover {
+  background: var(--ivory);
+}
+
+.cocon-select__new .icon {
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 740px) {
+  .cocon-select {
+    max-width: 220px;
+  }
 }
 
 /* ─── 15. Modales (Auth & Profil) ──────────────────────────────── */
@@ -1214,6 +1331,39 @@ body {
   margin-bottom: var(--space-3);
 }
 .modal__form--inline .form-input { flex: 1; }
+
+.profile-form {
+  gap: var(--space-4);
+}
+
+.profile-form__row {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.profile-form__row--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 380px) {
+  .profile-form__row--2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.form-input--readonly {
+  background: var(--ivory);
+  color: var(--ink-soft);
+  cursor: default;
+  border-style: dashed;
+}
 
 .form-label {
   font-family: 'Lora', serif;

@@ -149,6 +149,9 @@
         const err = await res.json();
         if (typeof err.detail === 'string') detail = err.detail;
       } catch (_e) { /* ignore */ }
+      if (res.status === 400 && detail.includes('X-Cocon-Id')) {
+        detail = 'Crée ou rejoins un cocon pour commencer (menu compte en haut).';
+      }
       throw new Error(detail);
     }
     if (res.status === 204) return null;
@@ -207,8 +210,8 @@
         const data = await apiForm('/api/auth/login', { username: email, password });
         session.save(data.access_token, data.user);
         this.close();
-        await coconBar.load();
         userModal.updateUserDisplay();
+        await ensureCoconAfterAuth();
         if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
@@ -222,8 +225,9 @@
         const data = await api('POST', '/api/auth/register', { email, password, display_name });
         session.save(data.access_token, data.user);
         this.close();
-        await coconBar.load();
         userModal.updateUserDisplay();
+        await ensureCoconAfterAuth();
+        if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
     bind() {
@@ -245,22 +249,61 @@
   const userModal = {
     _cocons: [],
 
+    _profileLabel(user) {
+      if (!user) return 'Mon compte';
+      const full = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+      return full || user.display_name || 'Mon compte';
+    },
+
+    fillProfileForm(user) {
+      if (!user) return;
+      let first = user.first_name || '';
+      let last = user.last_name || '';
+      if (!first && !last && user.display_name) {
+        const parts = user.display_name.trim().split(/\s+/);
+        first = parts[0] || '';
+        last = parts.slice(1).join(' ') || '';
+      }
+      const set = (sel, val) => {
+        const el = document.querySelector(sel);
+        if (el) el.value = val ?? '';
+      };
+      set('[data-profile-first-name]', first);
+      set('[data-profile-last-name]', last);
+      set('[data-profile-email]', user.email);
+      set('[data-profile-birth-date]', user.birth_date || '');
+      set('[data-profile-password]', '');
+      const err = document.querySelector('[data-profile-error]');
+      if (err) { err.hidden = true; err.textContent = ''; }
+    },
+
     updateUserDisplay() {
       const user = session.getUser();
       if (!user) return;
       const el = document.querySelector('[data-user-display-name]');
-      if (el) el.textContent = user.display_name || 'Mon compte';
-      const nameInput = document.querySelector('[data-profile-name]');
-      if (nameInput) nameInput.value = user.display_name || '';
+      if (el) el.textContent = this._profileLabel(user);
     },
 
-    open() {
+    async refreshProfile() {
+      try {
+        const user = await api('GET', '/api/auth/me');
+        session.save(session.getToken(), user);
+        this.fillProfileForm(user);
+        this.updateUserDisplay();
+        return user;
+      } catch {
+        this.fillProfileForm(session.getUser());
+        return session.getUser();
+      }
+    },
+
+    async open() {
       if (!session.isLoggedIn()) { authModal.open(); return; }
-      this.updateUserDisplay();
       this._renderCocons();
       document.querySelector('[data-user-backdrop]').hidden = false;
       document.querySelector('[data-user-modal]').hidden = false;
       document.body.style.overflow = 'hidden';
+      await this.refreshProfile();
     },
     close() {
       document.querySelector('[data-user-backdrop]').hidden = true;
@@ -303,19 +346,50 @@
       document.querySelector('[data-user-backdrop]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-action="open-user"]')?.addEventListener('click', async () => {
         await this.loadCocons();
-        this.open();
+        await this.open();
       });
       // Profil
       document.querySelector('[data-profile-form]')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.querySelector('[data-profile-name]').value.trim();
-        if (!name) return;
+        const first = document.querySelector('[data-profile-first-name]')?.value.trim() || '';
+        const last = document.querySelector('[data-profile-last-name]')?.value.trim() || '';
+        const birth = document.querySelector('[data-profile-birth-date]')?.value || '';
+        const password = document.querySelector('[data-profile-password]')?.value || '';
+        const errEl = document.querySelector('[data-profile-error]');
+        if (!first && !last) {
+          if (errEl) {
+            errEl.textContent = 'Indique au moins un prénom ou un nom.';
+            errEl.hidden = false;
+          }
+          return;
+        }
+        if (password && password.length < 6) {
+          if (errEl) {
+            errEl.textContent = 'Le mot de passe doit faire au moins 6 caractères.';
+            errEl.hidden = false;
+          }
+          return;
+        }
+        const body = {
+          first_name: first || null,
+          last_name: last || null,
+          birth_date: birth || null,
+        };
+        if (password) body.password = password;
         try {
-          const user = await api('PATCH', '/api/auth/me', { display_name: name });
+          const user = await api('PATCH', '/api/auth/me', body);
           session.save(session.getToken(), user);
+          this.fillProfileForm(user);
           this.updateUserDisplay();
-          toast('C\'est gardé.');
-        } catch (err) { toast(err.message); }
+          toast('Profil enregistré.');
+        } catch (err) {
+          if (errEl) {
+            errEl.textContent = err.message;
+            errEl.hidden = false;
+          } else {
+            toast(err.message);
+          }
+        }
       });
       // Déconnexion
       document.querySelector('[data-action="logout"]')?.addEventListener('click', () => {
@@ -390,47 +464,147 @@
     },
   };
 
-  // ─── Bandeau cocon (sous la topbar) ──────────────────────────────
+  // ─── Sélecteur cocon (topbar, liste déroulante) ───────────────────
   const coconBar = {
     _cocons: [],
+    _menuOpen: false,
+    _els: null,
+
+    cacheEls() {
+      this._els = {
+        root: document.querySelector('[data-cocon-select]'),
+        trigger: document.querySelector('[data-cocon-trigger]'),
+        menu: document.querySelector('[data-cocon-menu]'),
+        label: document.querySelector('[data-cocon-label]'),
+        list: document.querySelector('[data-cocon-list]'),
+      };
+    },
+
+    openMenu() {
+      if (!this._els?.menu || !this._els.trigger) return;
+      this._els.menu.hidden = false;
+      this._els.trigger.setAttribute('aria-expanded', 'true');
+      this._menuOpen = true;
+    },
+
+    closeMenu() {
+      if (!this._els?.menu || !this._els.trigger) return;
+      this._els.menu.hidden = true;
+      this._els.trigger.setAttribute('aria-expanded', 'false');
+      this._menuOpen = false;
+    },
+
+    toggleMenu() {
+      if (this._menuOpen) this.closeMenu();
+      else this.openMenu();
+    },
+
     async load() {
-      if (!session.isLoggedIn()) return;
+      if (!this._els) this.cacheEls();
+      if (!session.isLoggedIn()) {
+        this.hide();
+        return;
+      }
       try { this._cocons = await api('GET', '/api/cocons'); } catch { return; }
       if (!session.getCoconId() && this._cocons.length) {
         session.setActiveCocon(this._cocons[0].id);
       }
       this._render();
-      document.querySelector('[data-cocon-bar]').hidden = !this._cocons.length;
+      if (this._els?.root) this._els.root.hidden = false;
     },
-    hide() { document.querySelector('[data-cocon-bar]').hidden = true; },
-    setActive(id) { this._render(); },
+
+    hide() {
+      if (!this._els) this.cacheEls();
+      if (this._els?.root) this._els.root.hidden = true;
+      this.closeMenu();
+    },
+
+    setActive() { this._render(); },
+
     _render() {
-      const list = document.querySelector('[data-cocon-list]');
-      if (!list) return;
+      if (!this._els) this.cacheEls();
       const activeId = session.getCoconId();
-      list.innerHTML = this._cocons.map(c => `
-        <button class="cocon-pill${c.id === activeId ? ' is-active' : ''}"
-          type="button" data-cocon-switch="${c.id}" role="listitem">
-          ${escapeHtml(c.name)}
-        </button>`).join('');
+      const active = this._cocons.find((c) => c.id === activeId);
+      if (this._els?.label) {
+        this._els.label.textContent = active?.name
+          || (this._cocons.length ? 'Choisir…' : 'Mon cocon');
+      }
+      if (!this._els?.list) return;
+      if (!this._cocons.length) {
+        this._els.list.innerHTML = `
+          <li class="cocon-select__empty" role="presentation">
+            <p>Aucun cocon pour l'instant.</p>
+          </li>`;
+        return;
+      }
+      this._els.list.innerHTML = this._cocons.map((c) => `
+        <li role="presentation">
+          <button type="button" class="cocon-select__option${c.id === activeId ? ' is-active' : ''}"
+            data-cocon-switch="${c.id}" role="option" aria-selected="${c.id === activeId}">
+            <span class="cocon-select__option-name">${escapeHtml(c.name)}</span>
+            ${c.id === activeId ? '<span class="cocon-select__check" aria-hidden="true">✓</span>' : ''}
+          </button>
+        </li>`).join('');
     },
+
     bind() {
-      document.querySelector('[data-cocon-list]')?.addEventListener('click', (e) => {
+      this.cacheEls();
+      this._els.trigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleMenu();
+      });
+      this._els.list?.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-cocon-switch]');
         if (!btn) return;
         const id = parseInt(btn.dataset.coconSwitch, 10);
-        if (id === session.getCoconId()) return;
+        if (id === session.getCoconId()) {
+          this.closeMenu();
+          return;
+        }
         session.setActiveCocon(id);
         this._render();
+        this.closeMenu();
         reloadAllPillars();
       });
       document.querySelector('[data-action="new-cocon"]')?.addEventListener('click', async () => {
+        this.closeMenu();
         await userModal.loadCocons();
         userModal.open();
         document.querySelector('[data-create-cocon-form]').hidden = false;
       });
+      document.addEventListener('click', (e) => {
+        if (!this._menuOpen) return;
+        if (e.target.closest('[data-cocon-select]')) return;
+        this.closeMenu();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') this.closeMenu();
+      });
     },
   };
+
+  // ─── Cocon actif requis pour les piliers ─────────────────────────
+  function requireCocon() {
+    if (!session.isLoggedIn()) {
+      authModal.open();
+      return false;
+    }
+    if (!session.getCoconId()) {
+      toast('Crée ou rejoins un cocon pour commencer.');
+      userModal.open();
+      return false;
+    }
+    return true;
+  }
+
+  async function ensureCoconAfterAuth() {
+    await coconBar.load();
+    if (!session.getCoconId()) {
+      await userModal.loadCocons();
+      userModal.open();
+      toast('Crée ton premier cocon pour commencer.');
+    }
+  }
 
   // ─── Recharge tous les piliers quand le cocon change ─────────────
   function reloadAllPillars() {
@@ -640,6 +814,7 @@
     },
 
     openSearch() {
+      if (!requireCocon()) return;
       this.searchOpen = true;
       this.els.search.hidden = false;
       this.els.empty.hidden = true;
@@ -689,6 +864,7 @@
     }, SEARCH_DEBOUNCE_MS),
 
     async pickSearchHit(btn) {
+      if (!requireCocon()) return;
       btn.classList.add('is-loading');
       try {
         const details = await api(
@@ -905,6 +1081,7 @@
     },
 
     openAdd() {
+      if (!requireCocon()) return;
       this.addOpen = true;
       this.els.add.hidden = false;
       this.els.empty.hidden = true;
@@ -952,6 +1129,7 @@
     }, SEARCH_DEBOUNCE_MS),
 
     async pickPlace(btn) {
+      if (!requireCocon()) return;
       btn.classList.add('is-loading');
       try {
         const details = await api('GET', `/api/search/place/${encodeURIComponent(btn.dataset.placeId)}`);
@@ -1160,6 +1338,7 @@
     },
 
     openAdd() {
+      if (!requireCocon()) return;
       this.addOpen = true;
       this.pickedTags.clear();
       this.pickedEmoji = '✨';
@@ -1179,6 +1358,7 @@
     },
 
     async submit() {
+      if (!requireCocon()) return;
       const title = this.els.titleInput.value.trim();
       if (!title) {
         toast('Dites-nous ce qui vous tente.');
@@ -1376,6 +1556,7 @@
     },
 
     openAdd() {
+      if (!requireCocon()) return;
       this.addOpen = true;
       this.imageDataUrl = null;
       this.els.add.hidden = false;
@@ -1403,6 +1584,7 @@
     },
 
     async submitFromUrl() {
+      if (!requireCocon()) return;
       const url = this.els.urlInput.value.trim();
       if (!url) {
         toast('Collez un lien d\'abord.');
@@ -1428,6 +1610,7 @@
     },
 
     async submitFromTitle() {
+      if (!requireCocon()) return;
       const title = this.els.titleInput.value.trim();
       if (!title) {
         toast('Donnez un nom à la recette.');

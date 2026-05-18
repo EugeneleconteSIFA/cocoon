@@ -15,11 +15,17 @@ from .database import get_db
 
 log = logging.getLogger(__name__)
 
-SECRET_KEY = os.getenv("SECRET_KEY", "")
+SECRET_KEY = (os.getenv("SECRET_KEY") or "").strip()
 if not SECRET_KEY:
     import secrets as _s
     SECRET_KEY = _s.token_hex(32)
-    log.warning("SECRET_KEY non définie — clé aléatoire générée (tokens invalidés au redémarrage)")
+    if os.getenv("APP_ENV", "local").strip() == "production":
+        log.error(
+            "SECRET_KEY absente en production — les JWT sont invalidés à chaque redémarrage. "
+            "Ajoute SECRET_KEY dans backend/.env"
+        )
+    else:
+        log.warning("SECRET_KEY non définie — clé aléatoire (dev uniquement)")
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 jours
@@ -53,12 +59,13 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: int | None = payload.get("sub")
-        if user_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             raise exc
-    except JWTError:
+        user_id = int(sub)
+    except (JWTError, TypeError, ValueError):
         raise exc
-    user = db.get(models.User, int(user_id))
+    user = db.get(models.User, user_id)
     if user is None:
         raise exc
     return user
