@@ -115,6 +115,18 @@
     },
   };
 
+  // ─── Valide le JWT au démarrage (SECRET_KEY stable côté serveur) ─
+  async function validateSession() {
+    if (!session.getToken()) return false;
+    try {
+      const user = await api('GET', '/api/auth/me');
+      session.save(session.getToken(), user);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   // ─── Appels API ───────────────────────────────────────────────────
   async function api(method, path, body) {
     const opts = {
@@ -299,7 +311,6 @@
 
     async open() {
       if (!session.isLoggedIn()) { authModal.open(); return; }
-      this._renderCocons();
       document.querySelector('[data-user-backdrop]').hidden = false;
       document.querySelector('[data-user-modal]').hidden = false;
       document.body.style.overflow = 'hidden';
@@ -322,6 +333,10 @@
       if (err) { err.textContent = msg; err.hidden = false; }
     },
     async loadCocons() {
+      if (!session.getToken()) {
+        this._cocons = [];
+        return;
+      }
       try { this._cocons = await api('GET', '/api/cocons'); } catch { this._cocons = []; }
     },
     _renderCocons() {
@@ -345,8 +360,13 @@
       document.querySelector('[data-action="close-user"]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-user-backdrop]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-action="open-user"]')?.addEventListener('click', async () => {
-        await this.loadCocons();
+        if (!session.isLoggedIn()) {
+          authModal.open();
+          return;
+        }
         await this.open();
+        await this.loadCocons();
+        this._renderCocons();
       });
       // Profil
       document.querySelector('[data-profile-form]')?.addEventListener('submit', async (e) => {
@@ -501,7 +521,7 @@
 
     async load() {
       if (!this._els) this.cacheEls();
-      if (!session.isLoggedIn()) {
+      if (!session.getToken()) {
         this.hide();
         return;
       }
@@ -1870,11 +1890,16 @@
     userModal.bind();
     coconBar.bind();
 
-    // Si déjà connecté au démarrage, charger le bandeau + les piliers
-    // Sinon, ouvrir directement le modal de connexion
-    if (session.isLoggedIn()) {
-      coconBar.load().then(() => {
-        if (session.getCoconId()) reloadAllPillars();
+    // Token en localStorage → vérifier qu'il est encore valide (SECRET_KEY serveur)
+    if (session.getToken()) {
+      validateSession().then((ok) => {
+        if (!ok) {
+          authModal.open();
+          return;
+        }
+        coconBar.load().then(() => {
+          if (session.getCoconId()) reloadAllPillars();
+        });
       });
     } else {
       authModal.open();

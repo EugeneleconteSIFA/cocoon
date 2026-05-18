@@ -24,6 +24,15 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="/style.css" />
+  <!-- www → apex : une seule origine pour le JWT (localStorage) -->
+  <script>
+    (function () {
+      var h = location.hostname;
+      if (h.indexOf('www.') === 0 && h.length > 4) {
+        location.replace(location.protocol + '//' + h.slice(4) + location.pathname + location.search + location.hash);
+      }
+    })();
+  </script>
   <!-- Init thème AVANT le rendu pour éviter le flash blanc→sombre -->
   <script>
     (function () {
@@ -127,8 +136,7 @@
     <!-- ─── Header ──────────────────────────────────────────────── -->
     <header class="topbar" role="banner">
       <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
-        <span class="logo-name">Cocon</span>
-        <svg class="logo-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+        <img class="logo__img" src="/icons/logo.jpg" alt="" width="44" height="44" decoding="async" />
       </a>
       <div class="topbar__end">
         <div class="cocon-select" data-cocon-select hidden>

@@ -115,23 +115,16 @@ body {
 
 .logo {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  color: var(--ink);
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
 }
 
-.logo-name {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 28px;
-  line-height: 1;
-  letter-spacing: -0.4px;
-}
-
-.logo-ornament {
-  width: 14px;
-  height: 14px;
-  color: var(--copper);
-  opacity: 0.55;
+.logo__img {
+  display: block;
+  height: 44px;
+  width: auto;
+  object-fit: contain;
 }
 
 .topbar__end {

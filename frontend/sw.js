@@ -4,7 +4,7 @@
  *              network-first pour les appels API (/api/*).
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v2';
+const CACHE_NAME = 'cocon-v3';
 
 const SHELL_ASSETS = [
   '/',
