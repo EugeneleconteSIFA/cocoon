@@ -30,7 +30,7 @@
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (saved === 'dark' || (!saved && prefersDark)) {
         document.documentElement.classList.add('dark');
-      } else if (saved === 'light') {
+      } else {
         document.documentElement.classList.add('light');
       }
     })();
@@ -130,6 +130,12 @@
         <svg class="logo-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
       </a>
       <div style="display:flex;align-items:center;gap:4px;">
+        <button class="icon-button" type="button" data-action="open-user" aria-label="Mon compte" data-user-btn>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </button>
         <button class="btn-theme" type="button" data-action="toggle-theme" aria-label="Changer de thème">
           <!-- Lune (mode clair → bascule en sombre) -->
           <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -340,6 +346,16 @@
       </section>
     </main>
 
+    <!-- ─── Bandeau sélecteur de cocon ──────────────────────────── -->
+    <div class="cocon-bar" data-cocon-bar hidden>
+      <div class="cocon-bar__inner" data-cocon-list role="list" aria-label="Mes cocons"></div>
+      <button class="cocon-bar__add icon-button" type="button" data-action="new-cocon" aria-label="Nouveau cocon ou rejoindre">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+    </div>
+
     <!-- ─── Onglets bas ─────────────────────────────────────────── -->
     <nav class="tabbar" role="navigation" aria-label="Sections principales">
       <a class="tab" href="#culture" data-tab="culture">
@@ -359,6 +375,102 @@
         <span class="tab-label">Cuisine</span>
       </a>
     </nav>
+  </div>
+
+  <!-- ─── Modale Auth (login / register) ──────────────────────── -->
+  <div class="modal-backdrop" data-auth-backdrop hidden></div>
+  <div class="modal" data-auth-modal role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+    <div class="modal__header">
+      <h2 class="modal__title" id="auth-title">Bienvenue dans Cocon</h2>
+      <button class="icon-button modal__close" type="button" data-action="close-auth" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Tabs login / register -->
+    <div class="modal__tabs" role="tablist">
+      <button class="modal__tab is-active" type="button" data-auth-tab="login" role="tab">Connexion</button>
+      <button class="modal__tab" type="button" data-auth-tab="register" role="tab">Créer un compte</button>
+    </div>
+
+    <!-- Login -->
+    <form class="modal__form" data-auth-form="login" novalidate>
+      <label class="form-label" for="login-email">Email</label>
+      <input class="form-input" id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="ton@email.fr" required />
+      <label class="form-label" for="login-password">Mot de passe</label>
+      <input class="form-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••" required />
+      <p class="form-error" data-auth-error hidden></p>
+      <button class="btn btn-primary btn--full" type="submit">Se connecter</button>
+    </form>
+
+    <!-- Register -->
+    <form class="modal__form" data-auth-form="register" hidden novalidate>
+      <label class="form-label" for="reg-name">Ton prénom</label>
+      <input class="form-input" id="reg-name" type="text" autocomplete="given-name" placeholder="Eugène" required />
+      <label class="form-label" for="reg-email">Email</label>
+      <input class="form-input" id="reg-email" type="email" inputmode="email" autocomplete="email" placeholder="ton@email.fr" required />
+      <label class="form-label" for="reg-password">Mot de passe</label>
+      <input class="form-input" id="reg-password" type="password" autocomplete="new-password" placeholder="6 caractères min." required />
+      <p class="form-error" data-auth-error hidden></p>
+      <button class="btn btn-primary btn--full" type="submit">Créer mon compte</button>
+    </form>
+  </div>
+
+  <!-- ─── Modale Profil & Cocons ───────────────────────────────── -->
+  <div class="modal-backdrop" data-user-backdrop hidden></div>
+  <div class="modal" data-user-modal role="dialog" aria-modal="true" aria-labelledby="user-title" hidden>
+    <div class="modal__header">
+      <h2 class="modal__title" id="user-title" data-user-display-name>Mon compte</h2>
+      <button class="icon-button modal__close" type="button" data-action="close-user" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Section profil -->
+    <section class="modal__section">
+      <p class="modal__section-label">Mon profil</p>
+      <form class="modal__form modal__form--inline" data-profile-form novalidate>
+        <input class="form-input" type="text" data-profile-name placeholder="Prénom" autocomplete="given-name" />
+        <button class="btn btn-ghost" type="submit">Sauvegarder</button>
+      </form>
+      <button class="btn btn-ghost btn--danger" type="button" data-action="logout">Se déconnecter</button>
+    </section>
+
+    <!-- Section cocons -->
+    <section class="modal__section">
+      <p class="modal__section-label">Mes cocons</p>
+      <ul class="cocon-manage-list" data-cocon-manage-list role="list"></ul>
+      <div class="cocon-actions">
+        <button class="btn btn-primary" type="button" data-action="create-cocon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Créer un cocon
+        </button>
+        <button class="btn btn-ghost" type="button" data-action="join-cocon">Rejoindre avec un code</button>
+      </div>
+    </section>
+
+    <!-- Formulaire créer un cocon (inline, caché par défaut) -->
+    <form class="modal__form modal__sub-form" data-create-cocon-form hidden novalidate>
+      <label class="form-label" for="cocon-name">Nom de votre cocon</label>
+      <input class="form-input" id="cocon-name" type="text" placeholder="Notre bulle, L'aventure…" required />
+      <p class="form-hint">Un code unique sera généré pour inviter l'autre.</p>
+      <div class="modal__form-actions">
+        <button class="btn btn-primary" type="submit">Créer</button>
+        <button class="btn btn-ghost" type="button" data-action="cancel-cocon-form">Annuler</button>
+      </div>
+    </form>
+
+    <!-- Formulaire rejoindre un cocon (inline, caché par défaut) -->
+    <form class="modal__form modal__sub-form" data-join-cocon-form hidden novalidate>
+      <label class="form-label" for="cocon-code">Code d'invitation</label>
+      <input class="form-input form-input--mono" id="cocon-code" type="text" placeholder="EX: AB12CD34" maxlength="8" autocomplete="off" required />
+      <div class="modal__form-actions">
+        <button class="btn btn-primary" type="submit">Rejoindre</button>
+        <button class="btn btn-ghost" type="button" data-action="cancel-cocon-form">Annuler</button>
+      </div>
+    </form>
+
+    <p class="form-error" data-cocon-error hidden></p>
   </div>
 
   <!-- ─── Bottom sheet Culture (détail + actions) ─────────────── -->

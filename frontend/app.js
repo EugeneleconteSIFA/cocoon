@@ -94,18 +94,52 @@
     toastTimer = setTimeout(() => el.remove(), 2800);
   }
 
+  // ─── Session (JWT + cocon actif) ─────────────────────────────────
+  const session = {
+    TOKEN_KEY:  'cocon:token',
+    COCON_KEY:  'cocon:active',
+    USER_KEY:   'cocon:user',
+
+    getToken()   { return localStorage.getItem(this.TOKEN_KEY); },
+    getCoconId() { const v = localStorage.getItem(this.COCON_KEY); return v ? parseInt(v, 10) : null; },
+    getUser()    { try { return JSON.parse(localStorage.getItem(this.USER_KEY) || 'null'); } catch { return null; } },
+    isLoggedIn() { return !!this.getToken(); },
+
+    save(token, user) {
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    },
+    setActiveCocon(id) { localStorage.setItem(this.COCON_KEY, String(id)); },
+    clear() {
+      [this.TOKEN_KEY, this.COCON_KEY, this.USER_KEY].forEach(k => localStorage.removeItem(k));
+    },
+  };
+
+  // ─── Appels API ───────────────────────────────────────────────────
   async function api(method, path, body) {
     const opts = {
       method,
       headers: { Accept: 'application/json' },
-      // Requis derrière Basic Auth Nginx (VPS sans domaine)
       credentials: 'same-origin',
     };
+    const token = session.getToken();
+    if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+    const coconId = session.getCoconId();
+    if (coconId) opts.headers['X-Cocon-Id'] = String(coconId);
+
     if (body !== undefined) {
       opts.headers['Content-Type'] = 'application/json';
       opts.body = JSON.stringify(body);
     }
     const res = await fetch(path, opts);
+
+    // Session expirée → on déconnecte proprement
+    if (res.status === 401) {
+      session.clear();
+      authModal.open();
+      throw new Error('Session expirée, reconnecte-toi.');
+    }
+
     if (!res.ok) {
       let detail = 'Connexion fragile, on réessaie ?';
       try {
@@ -115,6 +149,23 @@
       throw new Error(detail);
     }
     if (res.status === 204) return null;
+    return res.json();
+  }
+
+  // Appel OAuth2 form-urlencoded (pour /api/auth/login)
+  async function apiForm(path, fields) {
+    const body = new URLSearchParams(fields);
+    const res = await fetch(path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body,
+      credentials: 'same-origin',
+    });
+    if (!res.ok) {
+      let detail = 'Email ou mot de passe incorrect';
+      try { const e = await res.json(); if (e.detail) detail = e.detail; } catch (_) {}
+      throw new Error(detail);
+    }
     return res.json();
   }
 
@@ -1360,19 +1411,12 @@
     // ─── Toggle dark mode ────────────────────────────────────────
     document.querySelector('[data-action="toggle-theme"]')?.addEventListener('click', () => {
       const html = document.documentElement;
-      const isDark = html.classList.contains('dark');
-      if (isDark) {
-        html.classList.remove('dark');
-        html.classList.add('light');
-        localStorage.setItem('cocon:theme', 'light');
-      } else {
-        html.classList.remove('light');
-        html.classList.add('dark');
-        localStorage.setItem('cocon:theme', 'dark');
-      }
-      // Mettre à jour le theme-color pour iOS
+      const goingDark = !html.classList.contains('dark');
+      html.classList.toggle('dark', goingDark);
+      html.classList.toggle('light', !goingDark);
+      localStorage.setItem('cocon:theme', goingDark ? 'dark' : 'light');
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.content = isDark ? '#B86578' : '#1E1318';
+      if (meta) meta.content = goingDark ? '#1E1318' : '#B86578';
     });
   }
 

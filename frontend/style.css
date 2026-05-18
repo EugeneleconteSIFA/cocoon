@@ -1034,7 +1034,305 @@ body {
   }
 }
 
-/* ─── 14. Mode sombre ───────────────────────────────────────────── */
+/* ─── 14. Bandeau cocon (sous la topbar) ───────────────────────── */
+.cocon-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  background: var(--ivory);
+  border-bottom: 1px solid rgba(201, 152, 120, 0.2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.cocon-bar::-webkit-scrollbar { display: none; }
+
+.cocon-bar__inner {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.cocon-bar__add {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  color: var(--ink-soft);
+}
+
+.cocon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(201, 152, 120, 0.35);
+  background: var(--paper);
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--t) var(--ease);
+}
+.cocon-pill.is-active {
+  background: var(--peony);
+  border-color: var(--peony);
+  color: var(--ivory);
+}
+.cocon-pill:hover:not(.is-active) {
+  border-color: var(--copper);
+  color: var(--ink);
+}
+
+/* ─── 15. Modales (Auth & Profil) ──────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(62, 31, 35, 0.45);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  z-index: 40;
+  animation: fade-in 200ms var(--ease) both;
+}
+
+.modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  width: min(calc(100vw - 32px), 420px);
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-3);
+  padding: var(--space-5) var(--space-6);
+  animation: modal-in 260ms var(--ease) both;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.modal__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--ink);
+  line-height: 1.2;
+}
+
+.modal__close {
+  flex-shrink: 0;
+  margin-top: -4px;
+}
+
+.modal__tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid rgba(201, 152, 120, 0.3);
+}
+
+.modal__tab {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: center;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all var(--t) var(--ease);
+}
+.modal__tab.is-active {
+  color: var(--peony);
+  border-bottom-color: var(--peony);
+}
+
+.modal__section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(201, 152, 120, 0.2);
+}
+.modal__section:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.modal__section-label {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--copper);
+  margin-bottom: var(--space-3);
+}
+
+.modal__sub-form {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--ivory);
+  border-radius: var(--radius);
+  border: 1px solid rgba(201, 152, 120, 0.25);
+}
+
+.modal__form-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+/* ─── 16. Formulaires ───────────────────────────────────────────── */
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.modal__form--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.modal__form--inline .form-input { flex: 1; }
+
+.form-label {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: -var(--space-1);
+}
+
+.form-input {
+  width: 100%;
+  padding: 11px var(--space-4);
+  background: var(--ivory);
+  border: 1px solid rgba(201, 152, 120, 0.4);
+  border-radius: var(--radius);
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  color: var(--ink);
+  transition: border-color var(--t) var(--ease), box-shadow var(--t) var(--ease);
+  outline: none;
+}
+.form-input::placeholder { color: var(--ink-faint); font-style: italic; }
+.form-input:focus {
+  border-color: var(--peony);
+  box-shadow: var(--shadow-1);
+}
+.form-input--mono {
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.2em;
+  font-size: 18px;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.form-error {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  color: var(--brick);
+  text-align: center;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(168, 92, 78, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.form-hint {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+/* Bouton pleine largeur */
+.btn--full { width: 100%; justify-content: center; }
+
+/* Bouton danger discret */
+.btn--danger {
+  color: var(--brick);
+  font-size: 13px;
+  margin-top: var(--space-2);
+}
+.btn--danger:hover { background: rgba(168, 92, 78, 0.07); }
+
+/* ─── 17. Liste de gestion des cocons (dans modale profil) ──────── */
+.cocon-manage-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.cocon-manage-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  background: var(--ivory);
+  border-radius: var(--radius);
+  border: 1px solid rgba(201, 152, 120, 0.2);
+}
+.cocon-manage-item.is-active {
+  border-color: var(--peony);
+  background: rgba(184, 101, 120, 0.06);
+}
+
+.cocon-manage-item__name {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.cocon-manage-item__meta {
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  color: var(--ink-soft);
+  margin-top: 2px;
+}
+
+.cocon-manage-item__code {
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: var(--peony);
+  background: rgba(184, 101, 120, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  user-select: all;
+  title: "Copier";
+}
+
+.cocon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ─── 18. Mode sombre ───────────────────────────────────────────── */
 /*
  * Activé par :
  *  a) La préférence OS (prefers-color-scheme: dark) si aucune préférence
@@ -1100,16 +1398,14 @@ body {
   color: var(--peony);
 }
 
-/* Icône lune / soleil dans le bouton */
-.btn-theme .icon-moon,
+/* Icône lune (mode clair) / soleil (mode sombre) — basé sur html.dark uniquement */
+.btn-theme .icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
 .btn-theme .icon-sun { display: none; }
 
-:root:not(.dark) .btn-theme .icon-moon { display: block; }
-:root.dark         .btn-theme .icon-sun  { display: block; }
-
-@media (prefers-color-scheme: dark) {
-  :root:not(.light) .btn-theme .icon-moon { display: none; }
-  :root:not(.light) .btn-theme .icon-sun  { display: block; }
-  :root.light       .btn-theme .icon-moon { display: block; }
-  :root.light       .btn-theme .icon-sun  { display: none; }
-}
+html.dark .btn-theme .icon-moon { display: none; }
+html.dark .btn-theme .icon-sun  { display: block; }
