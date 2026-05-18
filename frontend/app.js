@@ -295,8 +295,7 @@
         updateAuthUI(true);
         userModal.updateUserDisplay();
         await ensureCoconAfterAuth();
-        if (getJoinCodeFromUrl()) await handleJoinFromUrl();
-        else if (session.getCoconId()) reloadAllPillars();
+        if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
     async submitRegister(form) {
@@ -312,8 +311,7 @@
         updateAuthUI(true);
         userModal.updateUserDisplay();
         await ensureCoconAfterAuth();
-        if (getJoinCodeFromUrl()) await handleJoinFromUrl();
-        else if (session.getCoconId()) reloadAllPillars();
+        if (session.getCoconId()) reloadAllPillars();
       } catch (e) { this._showError(e.message); }
     },
     bind() {
@@ -563,20 +561,17 @@
       });
       document.querySelector('[data-join-cocon-form]')?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const code = document.querySelector('#cocon-code').value.trim().toUpperCase();
-        if (code.length !== 8) { this._showCoconError('Le code fait 8 caractères.'); return; }
-        try {
-          const cocon = await api('POST', '/api/cocons/join', { code });
-          session.setActiveCocon(cocon.id, cocon.name);
-          this._cocons.push(cocon);
-          this._renderCocons();
+        const code = normalizeJoinCode(document.querySelector('#cocon-code')?.value);
+        if (!code) { this._showCoconError('Le code fait 8 caractères.'); return; }
+        setPendingJoinCode(code);
+        const joined = await attemptJoinCocon(code);
+        if (joined) {
           this._hideSubForms();
           document.querySelector('#cocon-code').value = '';
-          await coconBar.load();
-          clearJoinFromUrl();
-          toast(`Bienvenue dans "${cocon.name}" !`);
-          reloadAllPillars();
-        } catch (err) { this._showCoconError(err.message); }
+          this.close();
+        } else {
+          this._showCoconError('Code invalide ou introuvable.');
+        }
       });
       // Switch cocon depuis la liste dans la modale
       document.querySelector('[data-cocon-manage-list]')?.addEventListener('click', async (e) => {
@@ -769,23 +764,123 @@
     return true;
   }
 
+  const PENDING_JOIN_KEY = 'cocon:pendingJoin';
+
+  function normalizeJoinCode(raw) {
+    if (!raw) return null;
+    const s = String(raw).trim();
+    if (!s) return null;
+    try {
+      if (/^https?:\/\//i.test(s) || s.startsWith('/')) {
+        const url = new URL(s, location.origin);
+        const fromParam = url.searchParams.get('join');
+        if (fromParam) return fromParam.trim().toUpperCase();
+      }
+    } catch (_e) { /* ignore */ }
+    const paramMatch = s.match(/[?&]join=([A-Za-z0-9]+)/i);
+    if (paramMatch) return paramMatch[1].toUpperCase();
+    const codeLabel = s.match(/code\s*:\s*([A-Za-z0-9]+)/i);
+    if (codeLabel) return codeLabel[1].toUpperCase();
+    const compact = s.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (compact.length === 8) return compact;
+    const token = s.match(/\b([A-Za-z0-9]{8})\b/);
+    return token ? token[1].toUpperCase() : null;
+  }
+
   function getJoinCodeFromUrl() {
     const code = new URLSearchParams(location.search).get('join');
     return code ? code.trim().toUpperCase() : null;
   }
 
-  function clearJoinFromUrl() {
+  function getPendingJoinCode() {
+    return getJoinCodeFromUrl() || (sessionStorage.getItem(PENDING_JOIN_KEY) || '').trim().toUpperCase() || null;
+  }
+
+  function setPendingJoinCode(code) {
+    if (!code) return;
+    sessionStorage.setItem(PENDING_JOIN_KEY, code);
+    const url = new URL(location.href);
+    url.searchParams.set('join', code);
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }
+
+  function clearPendingJoinCode() {
+    sessionStorage.removeItem(PENDING_JOIN_KEY);
     const url = new URL(location.href);
     if (!url.searchParams.has('join')) return;
     url.searchParams.delete('join');
     history.replaceState(null, '', url.pathname + url.search + url.hash);
   }
 
-  async function handleJoinFromUrl() {
-    const code = getJoinCodeFromUrl();
-    if (!code) return;
+  function prefillGuestJoinCode(code) {
+    const guestInput = document.querySelector('[data-guest-join-code]');
+    if (guestInput) guestInput.value = code;
+    const modalInput = document.querySelector('#cocon-code');
+    if (modalInput) modalInput.value = code;
+  }
+
+  async function attemptJoinCocon(code) {
+    if (!code || code.length !== 8) {
+      toast('Code invalide — 8 caractères attendus.');
+      return false;
+    }
+    try {
+      const cocon = await api('POST', '/api/cocons/join', { code });
+      session.setActiveCocon(cocon.id, cocon.name);
+      await coconBar.load();
+      if (userModal._cocons) {
+        const exists = userModal._cocons.some((c) => c.id === cocon.id);
+        if (!exists) userModal._cocons.push(cocon);
+        userModal._renderCocons();
+      }
+      userModal.close();
+      clearPendingJoinCode();
+      toast(`Bienvenue dans « ${cocon.name} » !`);
+      reloadAllPillars();
+      return true;
+    } catch (err) {
+      toast(err.message);
+      return false;
+    }
+  }
+
+  async function startJoinFlow(raw) {
+    const code = normalizeJoinCode(raw);
+    if (!code) {
+      toast('Colle un code à 8 caractères ou le lien d\'invitation.');
+      return;
+    }
+    setPendingJoinCode(code);
+    prefillGuestJoinCode(code);
     if (!session.getToken()) {
       authModal.open();
+      toast('Connecte-toi pour rejoindre le cocon.');
+      return;
+    }
+    const ok = await validateSession();
+    if (!ok) {
+      authModal.open();
+      toast('Connecte-toi pour rejoindre le cocon.');
+      return;
+    }
+    const joined = await attemptJoinCocon(code);
+    if (!joined) {
+      await userModal.loadCocons();
+      userModal.open();
+      userModal.switchTab('cocons');
+      userModal._hideSubForms();
+      document.querySelector('[data-join-cocon-form]').hidden = false;
+    }
+  }
+
+  async function handleJoinFromUrl() {
+    const code = getPendingJoinCode();
+    if (!code) return;
+    setPendingJoinCode(code);
+    prefillGuestJoinCode(code);
+    if (!session.getToken()) {
+      authModal.open();
+      toast('Connecte-toi pour rejoindre le cocon.');
       return;
     }
     const ok = await validateSession();
@@ -793,37 +888,29 @@
       authModal.open();
       return;
     }
-    await userModal.loadCocons();
-    userModal.open();
-    userModal.switchTab('cocons');
-    userModal._hideSubForms();
-    const input = document.querySelector('#cocon-code');
-    if (input) input.value = code;
-    if (code.length === 8) {
-      try {
-        const cocon = await api('POST', '/api/cocons/join', { code });
-        session.setActiveCocon(cocon.id, cocon.name);
-        await coconBar.load();
-        userModal._renderCocons();
-        userModal.close();
-        clearJoinFromUrl();
-        toast(`Bienvenue dans « ${cocon.name} » !`);
-        reloadAllPillars();
-        return;
-      } catch (err) {
-        toast(err.message);
-      }
+    const joined = await attemptJoinCocon(code);
+    if (!joined) {
+      await userModal.loadCocons();
+      userModal.open();
+      userModal.switchTab('cocons');
+      userModal._hideSubForms();
+      document.querySelector('[data-join-cocon-form]').hidden = false;
+      toast('Code d\'invitation détecté — confirme pour rejoindre.');
     }
-    document.querySelector('[data-join-cocon-form]').hidden = false;
-    toast('Code d\'invitation détecté — confirme pour rejoindre.');
   }
 
   async function ensureCoconAfterAuth() {
+    const pending = getPendingJoinCode();
+    if (pending) {
+      prefillGuestJoinCode(pending);
+      const joined = await attemptJoinCocon(pending);
+      if (joined) return;
+    }
     await coconBar.load();
     if (!session.getCoconId()) {
       await userModal.loadCocons();
       userModal.open();
-      toast('Crée ton premier cocon pour commencer.');
+      toast(pending ? 'Code invalide ou déjà utilisé.' : 'Crée ton premier cocon pour commencer.');
     }
   }
 
@@ -2095,6 +2182,19 @@
       btn.addEventListener('click', () => authModal.open());
     });
 
+    document.querySelector('[data-guest-join-form]')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.querySelector('[data-guest-join-code]');
+      await startJoinFlow(input?.value || '');
+    });
+    document.querySelector('[data-guest-join-code]')?.addEventListener('paste', (e) => {
+      const input = e.target;
+      setTimeout(() => {
+        const code = normalizeJoinCode(input.value);
+        if (code) input.value = code;
+      }, 0);
+    });
+
     if (session.getToken()) {
       updateAuthUI(true);
       validateSession().then((ok) => {
@@ -2110,7 +2210,11 @@
       });
     } else {
       updateAuthUI(false);
-      if (getJoinCodeFromUrl()) handleJoinFromUrl();
+      const pending = getPendingJoinCode();
+      if (pending) {
+        setPendingJoinCode(pending);
+        prefillGuestJoinCode(pending);
+      }
     }
 
     // Thème : géré par window.coconApplyTheme dans index.html (avant app.js)

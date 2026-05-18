@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=10" />
+  <link rel="stylesheet" href="/style.css?v=12" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -191,7 +191,6 @@
     <header class="topbar" role="banner">
       <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
         <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
-        <span class="logo__text">Cocon</span>
       </a>
       <div class="topbar__cocon">
         <div class="cocon-switcher" data-cocon-select hidden>
@@ -268,6 +267,19 @@
             <span>Cuisine</span>
           </li>
         </ul>
+        <form class="welcome__join" data-guest-join-form novalidate>
+          <p class="welcome__join-label">Tu as un code d'invitation ?</p>
+          <input
+            class="form-input form-input--mono welcome__join-input"
+            type="text"
+            data-guest-join-code
+            placeholder="Colle le code ou le lien"
+            autocomplete="off"
+            spellcheck="false"
+            enterkeyhint="go"
+          />
+          <button class="btn btn-ghost welcome__join-btn" type="submit">Rejoindre un cocon</button>
+        </form>
         <button class="btn btn-primary welcome__cta" type="button" data-action="open-auth">
           Se connecter
         </button>
@@ -626,7 +638,7 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=14" defer></script>
+  <script src="/app.js?v=15" defer></script>
   <!-- PWA : SW uniquement en local ou HTTPS -->
   <script>
     (function () {

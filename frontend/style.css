@@ -123,25 +123,25 @@ body {
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
-  color: var(--peony);
+  border-radius: var(--radius-pill);
+  color: var(--ink-soft);
   text-decoration: none;
+  transition: background-color var(--t) var(--ease), color var(--t) var(--ease);
+}
+
+.logo:hover {
+  background: var(--ivory);
+  color: var(--peony);
 }
 
 .logo__peony {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
-}
-
-.logo__text {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 22px;
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.3px;
-  color: var(--peony);
 }
 
 .topbar__cocon {
@@ -332,6 +332,36 @@ body {
   width: 26px;
   height: 26px;
   color: var(--peony);
+}
+
+.welcome__join {
+  width: 100%;
+  max-width: 320px;
+  margin-bottom: var(--space-6);
+  padding: var(--space-5) 0 var(--space-2);
+  border-top: 1px solid var(--line-copper);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-3);
+}
+
+.welcome__join-label {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.welcome__join-input {
+  text-align: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.welcome__join-btn {
+  width: 100%;
 }
 
 .welcome__cta {
