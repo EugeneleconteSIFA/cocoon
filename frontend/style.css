@@ -18,6 +18,8 @@
   --ink-soft:     #8E6A6E;
   --ink-faint:    #B59C95;
   --brick:        #A85C4E;
+  --line-copper:  rgba(201, 152, 120, 0.25);
+  --overlay:      rgba(62, 31, 35, 0.45);
 
   /* Espacements */
   --space-1: 4px;
@@ -70,6 +72,8 @@ html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   min-height: 100dvh;
   background-color: var(--cream);
+  color-scheme: light;
+  transition: background-color var(--t) var(--ease), color var(--t) var(--ease);
   /* texture papier très subtile, opacité 0.04 baked-in */
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.243  0 0 0 0 0.121  0 0 0 0 0.137  0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
@@ -102,15 +106,16 @@ body {
   top: 0;
   z-index: 20;
 
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-5);
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   padding-top: calc(var(--space-3) + env(safe-area-inset-top, 0px));
 
   background: var(--cream);
-  border-bottom: 1px solid rgba(201, 152, 120, 0.25); /* filet cuivre */
+  border-bottom: 1px solid var(--line-copper);
+  transition: background-color var(--t) var(--ease), border-color var(--t) var(--ease);
 }
 
 .logo {
@@ -128,13 +133,17 @@ body {
   border-radius: var(--radius-sm);
 }
 
-.topbar__actions {
+.topbar__cocon {
+  min-width: 0;
+  justify-self: stretch;
+}
+
+.topbar__tools {
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-left: auto;
-  min-width: 0;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 /* ─── 5. Icon button (générique, ghost) ────────────────────────── */
@@ -165,9 +174,24 @@ body {
 /* ─── 6. Conteneur des vues (scrollable au milieu) ─────────────── */
 .views {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
   padding: var(--space-6) var(--space-5);
   padding-bottom: calc(var(--tabbar-h) + var(--space-6) + env(safe-area-inset-bottom, 0px));
-  /* la marge basse couvre la tabbar sticky pour éviter le recouvrement */
+}
+
+.views__app {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.app--guest .views__app {
+  display: none;
+}
+
+.app--guest .views {
+  padding-top: var(--space-5);
 }
 
 .view {
@@ -202,6 +226,98 @@ body {
   line-height: 1.1;
   letter-spacing: -0.3px;
   color: var(--ink);
+}
+
+/* ─── 7b. Accueil invité ───────────────────────────────────────── */
+.welcome {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-6) var(--space-4) var(--space-7);
+}
+
+.welcome[hidden] {
+  display: none !important;
+}
+
+.welcome__ornament {
+  width: 40px;
+  height: 40px;
+  color: var(--copper);
+  opacity: 0.55;
+  margin-bottom: var(--space-5);
+}
+
+.welcome__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(36px, 10vw, 44px);
+  font-weight: 400;
+  color: var(--peony);
+  line-height: 1.1;
+  margin-bottom: var(--space-2);
+}
+
+.welcome__tagline {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink-soft);
+  margin-bottom: var(--space-5);
+}
+
+.welcome__lead {
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 34ch;
+  margin-bottom: var(--space-6);
+}
+
+.welcome__pillars {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  width: 100%;
+  max-width: 280px;
+  margin-bottom: var(--space-6);
+}
+
+.welcome__pillar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
+  background: var(--ivory);
+  border-radius: var(--radius);
+  border: 1px solid var(--line-copper);
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.welcome__pillar-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--peony);
+}
+
+.welcome__cta {
+  min-width: 200px;
+  margin-bottom: var(--space-3);
+}
+
+.welcome__hint {
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink-faint);
+  max-width: 26ch;
 }
 
 /* ─── 8. État vide (centré dans la vue) ────────────────────────── */
@@ -282,14 +398,28 @@ body {
   bottom: 0;
   z-index: 20;
 
+  background: var(--paper);
+  border-top: 1px solid var(--line-copper);
+  transition: background-color var(--t) var(--ease), border-color var(--t) var(--ease);
+  padding: var(--space-2) var(--space-2);
+  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+}
+
+.tabbar__pillars {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-1);
+}
 
-  background: var(--paper);
-  border-top: 1px solid rgba(201, 152, 120, 0.25); /* filet cuivre */
-  padding: var(--space-2) var(--space-2);
-  padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+.tabbar__pillars[hidden] {
+  display: none !important;
+}
+
+.app--guest .tabbar {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-3);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
 }
 
 .tab {
@@ -317,6 +447,42 @@ body {
   letter-spacing: 0.06em;
   color: var(--ink-soft);
   transition: color var(--t) var(--ease);
+}
+
+.tab-sublabel {
+  font-family: 'Lora', serif;
+  font-size: 10px;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  line-height: 1.2;
+}
+
+.tab--guest {
+  width: 100%;
+  max-width: 140px;
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  color: var(--peony);
+}
+
+.tab--guest .tab-label {
+  color: var(--ink);
+  font-size: 12px;
+}
+
+.tab--guest[hidden] {
+  display: none !important;
+}
+
+.tab--guest:hover .tab-sublabel {
+  color: var(--ink-soft);
+}
+
+.app--guest .topbar__cocon,
+.app--guest [data-user-btn],
+.app--guest [data-action="header-search"] {
+  display: none !important;
 }
 
 .tab:hover { color: var(--peony); }
@@ -1040,20 +1206,22 @@ body {
 /* ─── 14. Sélecteur cocon (intégré topbar, clic sur le nom) ─────── */
 .cocon-switcher {
   position: relative;
+  width: 100%;
   min-width: 0;
-  max-width: min(38vw, 160px);
-  margin-right: var(--space-1);
+  max-width: 100%;
 }
 
 .cocon-switcher__name {
   display: block;
+  width: 100%;
   max-width: 100%;
   height: 40px;
   padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 17px;
+  font-size: clamp(16px, 4.5vw, 20px);
   line-height: 40px;
+  text-align: left;
   letter-spacing: -0.2px;
   color: var(--peony);
   cursor: pointer;
@@ -1151,8 +1319,17 @@ body {
 }
 
 @media (min-width: 740px) {
-  .cocon-switcher {
-    max-width: 200px;
+  .topbar {
+    padding-left: var(--space-5);
+    padding-right: var(--space-5);
+  }
+
+  .cocon-switcher__name {
+    font-size: 20px;
+  }
+
+  .cocon-switcher__menu {
+    min-width: 240px;
   }
 }
 
@@ -1160,7 +1337,7 @@ body {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(62, 31, 35, 0.45);
+  background: var(--overlay);
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   z-index: 40;
@@ -1309,6 +1486,27 @@ body {
   min-width: 0;
 }
 
+.modal--account {
+  width: min(calc(100vw - 32px), 440px);
+}
+
+.user-modal__tabs {
+  margin-bottom: var(--space-4);
+}
+
+.user-panel__logout {
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+.profile-meta {
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-style: italic;
+  margin: 0;
+}
+
 .form-input--readonly {
   background: var(--ivory);
   color: var(--ink-soft);
@@ -1435,11 +1633,13 @@ body {
 
 /* ─── 18. Mode sombre ───────────────────────────────────────────── */
 /*
- * Uniquement via html.dark (toggle + init dans index.html).
- * html.light = palette claire par défaut (:root).
+ * Toggle : data-theme + classe .dark sur <html> (index.html, coconApplyTheme).
+ * Ne pas utiliser @media (prefers-color-scheme) seul — incompatible avec le choix explicite.
  */
 
+html[data-theme="dark"],
 html.dark {
+  color-scheme: dark;
   --cream:       #1E1318;
   --ivory:       #261A1E;
   --paper:       #2E2024;
@@ -1452,14 +1652,23 @@ html.dark {
   --ink-soft:    #C4A09A;
   --ink-faint:   #8A6A65;
   --brick:       #C06855;
+  --line-copper: rgba(176, 128, 96, 0.38);
+  --overlay:     rgba(0, 0, 0, 0.55);
   --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.20);
   --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.28);
   --shadow-3: 0 12px 32px rgba(0, 0, 0, 0.40);
 }
 
+html[data-theme="dark"] body,
 html.dark body {
+  color-scheme: dark;
   background-image:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.05  0 0 0 0 0.06  0 0 0 0.06 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+}
+
+html[data-theme="light"],
+html.light {
+  color-scheme: light;
 }
 
 /* Bouton toggle dark mode dans la topbar */
@@ -1489,5 +1698,7 @@ html.dark body {
 
 .btn-theme .icon-sun { display: none; }
 
+html[data-theme="dark"] .btn-theme .icon-moon,
 html.dark .btn-theme .icon-moon { display: none; }
+html[data-theme="dark"] .btn-theme .icon-sun,
 html.dark .btn-theme .icon-sun  { display: block; }

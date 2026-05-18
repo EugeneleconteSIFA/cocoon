@@ -23,7 +23,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=3" />
+  <link rel="stylesheet" href="/style.css?v=7" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -33,19 +33,62 @@
       }
     })();
   </script>
-  <!-- Init thème AVANT le rendu pour éviter le flash blanc→sombre -->
+  <!-- Thème : appliqué avant le rendu + toggle indépendant de app.js (cache PWA) -->
   <script>
     (function () {
+      window.coconApplyTheme = function (theme) {
+        var root = document.documentElement;
+        var dark = theme === 'dark';
+        root.setAttribute('data-theme', theme);
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light', !dark);
+        try { localStorage.setItem('cocon:theme', theme); } catch (_e) { /* ignore */ }
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = dark ? '#1E1318' : '#B86578';
+      };
+
       var saved = localStorage.getItem('cocon:theme');
       var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      var root = document.documentElement;
-      if (saved === 'dark' || (!saved && prefersDark)) {
-        root.classList.add('dark');
-        root.classList.remove('light');
-      } else {
-        root.classList.add('light');
-        root.classList.remove('dark');
-      }
+      var theme = saved === 'dark' || saved === 'light'
+        ? saved
+        : (prefersDark ? 'dark' : 'light');
+      window.coconApplyTheme(theme);
+
+      window.coconToggleTheme = function () {
+        var root = document.documentElement;
+        var isDark = root.getAttribute('data-theme') === 'dark' || root.classList.contains('dark');
+        window.coconApplyTheme(isDark ? 'light' : 'dark');
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var hasToken = !!localStorage.getItem('cocon:token');
+          var appEl = document.querySelector('.app');
+          if (!hasToken && appEl) {
+            appEl.classList.add('app--guest');
+            var welcome = document.querySelector('[data-guest-welcome]');
+            var guestTab = document.querySelector('[data-tabbar-guest]');
+            var pillars = document.querySelector('[data-tabbar-pillars]');
+            if (welcome) welcome.hidden = false;
+            if (guestTab) guestTab.hidden = false;
+            if (pillars) pillars.hidden = true;
+          } else if (hasToken) {
+            var coconSel = document.querySelector('[data-cocon-select]');
+            var coconLbl = document.querySelector('[data-cocon-label]');
+            if (coconSel) coconSel.hidden = false;
+            var coconName = localStorage.getItem('cocon:activeName');
+            if (coconName && coconLbl) coconLbl.textContent = coconName;
+          }
+        } catch (_e) { /* ignore */ }
+
+        var btn = document.querySelector('[data-action="toggle-theme"]');
+        if (!btn || btn.dataset.themeBound) return;
+        btn.dataset.themeBound = '1';
+        btn.addEventListener('click', function (e) {
+          e.stopImmediatePropagation();
+          window.coconToggleTheme();
+        }, true);
+      });
     })();
   </script>
 </head>
@@ -141,7 +184,7 @@
       <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
         <img class="logo__img" src="/icons/logo.jpg?v=2" alt="" width="44" height="44" decoding="async" />
       </a>
-      <div class="topbar__actions">
+      <div class="topbar__cocon">
         <div class="cocon-switcher" data-cocon-select hidden>
           <button
             class="cocon-switcher__name"
@@ -159,6 +202,9 @@
             <button class="cocon-switcher__new" type="button" data-action="new-cocon">+ Nouveau cocon</button>
           </div>
         </div>
+      </div>
+
+      <div class="topbar__tools">
         <button class="icon-button" type="button" data-action="open-user" aria-label="Mon compte" data-user-btn>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="8" r="4"/>
@@ -187,6 +233,39 @@
 
     <!-- ─── Vues (une par pilier) ───────────────────────────────── -->
     <main class="views" role="main">
+      <!-- Accueil invité (non connecté) -->
+      <section class="welcome" data-guest-welcome hidden aria-labelledby="welcome-title">
+        <svg class="welcome__ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+        <h1 class="welcome__title" id="welcome-title">Cocon</h1>
+        <p class="welcome__tagline">Notre carnet à deux.</p>
+        <p class="welcome__lead">
+          Films à voir, lieux à explorer, activités et recettes — tout ce que vous gardez pour plus tard, ensemble.
+        </p>
+        <ul class="welcome__pillars" aria-label="Les quatre piliers">
+          <li class="welcome__pillar">
+            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-culture" /></svg>
+            <span>Culture</span>
+          </li>
+          <li class="welcome__pillar">
+            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-lieux" /></svg>
+            <span>Lieux</span>
+          </li>
+          <li class="welcome__pillar">
+            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-activites" /></svg>
+            <span>Activités</span>
+          </li>
+          <li class="welcome__pillar">
+            <svg class="welcome__pillar-icon" aria-hidden="true"><use href="#i-cuisine" /></svg>
+            <span>Cuisine</span>
+          </li>
+        </ul>
+        <button class="btn btn-primary welcome__cta" type="button" data-action="open-auth">
+          Se connecter
+        </button>
+        <p class="welcome__hint">Pas encore de compte ? Vous pourrez en créer un en un clin d'œil.</p>
+      </section>
+
+      <div class="views__app" data-views-app>
       <section class="view" data-view="culture" aria-labelledby="title-culture">
         <header class="view-header">
           <p class="kicker">Culture</p>
@@ -373,26 +452,37 @@
           <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
         </button>
       </section>
+      </div>
     </main>
 
-    <!-- ─── Onglets bas ─────────────────────────────────────────── -->
-    <nav class="tabbar" role="navigation" aria-label="Sections principales">
-      <a class="tab" href="#culture" data-tab="culture">
-        <svg class="tab-icon" aria-hidden="true"><use href="#i-culture" /></svg>
-        <span class="tab-label">Culture</span>
-      </a>
-      <a class="tab" href="#lieux" data-tab="lieux">
-        <svg class="tab-icon" aria-hidden="true"><use href="#i-lieux" /></svg>
-        <span class="tab-label">Lieux</span>
-      </a>
-      <a class="tab" href="#activites" data-tab="activites">
-        <svg class="tab-icon" aria-hidden="true"><use href="#i-activites" /></svg>
-        <span class="tab-label">Activités</span>
-      </a>
-      <a class="tab" href="#cuisine" data-tab="cuisine">
-        <svg class="tab-icon" aria-hidden="true"><use href="#i-cuisine" /></svg>
-        <span class="tab-label">Cuisine</span>
-      </a>
+    <!-- ─── Footer : onglets (connecté) ou profil (invité) ─────── -->
+    <nav class="tabbar" data-tabbar role="navigation" aria-label="Navigation">
+      <div class="tabbar__pillars" data-tabbar-pillars>
+        <a class="tab" href="#culture" data-tab="culture">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-culture" /></svg>
+          <span class="tab-label">Culture</span>
+        </a>
+        <a class="tab" href="#lieux" data-tab="lieux">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-lieux" /></svg>
+          <span class="tab-label">Lieux</span>
+        </a>
+        <a class="tab" href="#activites" data-tab="activites">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-activites" /></svg>
+          <span class="tab-label">Activités</span>
+        </a>
+        <a class="tab" href="#cuisine" data-tab="cuisine">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-cuisine" /></svg>
+          <span class="tab-label">Cuisine</span>
+        </a>
+      </div>
+      <button type="button" class="tab tab--guest" data-tabbar-guest data-action="open-auth" hidden>
+        <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+        <span class="tab-label">Mon profil</span>
+        <span class="tab-sublabel">Se connecter</span>
+      </button>
     </nav>
   </div>
 
@@ -435,7 +525,7 @@
 
   <!-- ─── Modale Profil & Cocons ───────────────────────────────── -->
   <div class="modal-backdrop" data-user-backdrop hidden></div>
-  <div class="modal" data-user-modal role="dialog" aria-modal="true" aria-labelledby="user-title" hidden>
+  <div class="modal modal--account" data-user-modal role="dialog" aria-modal="true" aria-labelledby="user-title" hidden>
     <div class="modal__header">
       <h2 class="modal__title" id="user-title" data-user-display-name>Mon compte</h2>
       <button class="icon-button modal__close" type="button" data-action="close-user" aria-label="Fermer">
@@ -443,24 +533,27 @@
       </button>
     </div>
 
-    <!-- Section profil -->
-    <section class="modal__section">
-      <p class="modal__section-label">Mon profil</p>
+    <div class="modal__tabs user-modal__tabs" role="tablist" aria-label="Compte">
+      <button type="button" class="modal__tab is-active" data-user-tab="profil" role="tab" aria-selected="true">Mon profil</button>
+      <button type="button" class="modal__tab" data-user-tab="cocons" role="tab" aria-selected="false">Mes cocons</button>
+    </div>
+
+    <section class="user-panel" data-user-panel="profil">
       <form class="modal__form profile-form" data-profile-form novalidate>
+        <div class="form-field">
+          <label class="form-label" for="profile-email">Adresse email</label>
+          <input class="form-input form-input--readonly" id="profile-email" type="email" data-profile-email readonly tabindex="-1" aria-readonly="true" />
+          <p class="form-hint">Email de connexion (non modifiable).</p>
+        </div>
         <div class="profile-form__row profile-form__row--2">
           <div class="form-field">
             <label class="form-label" for="profile-first-name">Prénom</label>
-            <input class="form-input" id="profile-first-name" type="text" data-profile-first-name autocomplete="given-name" placeholder="Prénom" />
+            <input class="form-input" id="profile-first-name" type="text" data-profile-first-name autocomplete="given-name" required />
           </div>
           <div class="form-field">
             <label class="form-label" for="profile-last-name">Nom</label>
-            <input class="form-input" id="profile-last-name" type="text" data-profile-last-name autocomplete="family-name" placeholder="Nom" />
+            <input class="form-input" id="profile-last-name" type="text" data-profile-last-name autocomplete="family-name" />
           </div>
-        </div>
-        <div class="form-field">
-          <label class="form-label" for="profile-email">Email</label>
-          <input class="form-input form-input--readonly" id="profile-email" type="email" data-profile-email readonly tabindex="-1" aria-readonly="true" />
-          <p class="form-hint">L'email ne peut pas être modifié ici.</p>
         </div>
         <div class="form-field">
           <label class="form-label" for="profile-birth-date">Date de naissance</label>
@@ -470,15 +563,14 @@
           <label class="form-label" for="profile-password">Nouveau mot de passe</label>
           <input class="form-input" id="profile-password" type="password" data-profile-password autocomplete="new-password" placeholder="Laisser vide pour ne pas changer" />
         </div>
+        <p class="profile-meta" data-profile-created hidden></p>
         <p class="form-error" data-profile-error hidden></p>
-        <button class="btn btn-primary btn--full" type="submit">Enregistrer le profil</button>
+        <button class="btn btn-primary btn--full" type="submit">Enregistrer</button>
       </form>
-      <button class="btn btn-ghost btn--danger" type="button" data-action="logout">Se déconnecter</button>
+      <button class="btn btn-ghost btn--danger user-panel__logout" type="button" data-action="logout">Se déconnecter</button>
     </section>
 
-    <!-- Section cocons -->
-    <section class="modal__section">
-      <p class="modal__section-label">Mes cocons</p>
+    <section class="user-panel" data-user-panel="cocons" hidden>
       <ul class="cocon-manage-list" data-cocon-manage-list role="list"></ul>
       <div class="cocon-actions">
         <button class="btn btn-primary" type="button" data-action="create-cocon">
@@ -533,7 +625,7 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=7" defer></script>
+  <script src="/app.js?v=11" defer></script>
   <!-- PWA : SW uniquement en local ou HTTPS (incompatible avec Basic Auth sur IP HTTP) -->
   <script>
     (function () {

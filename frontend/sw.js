@@ -4,7 +4,7 @@
  *              network-first pour les appels API (/api/*).
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v4';
+const CACHE_NAME = 'cocon-v9';
 
 const SHELL_ASSETS = [
   '/style.css',
@@ -45,7 +45,7 @@ self.addEventListener('fetch', (event) => {
   if (!url.protocol.startsWith('http')) return;
 
   // JS / HTML → toujours le réseau (évite un app.js obsolète en cache)
-  if (url.pathname === '/app.js' || url.pathname === '/' || url.pathname.endsWith('.html')) {
+  if (url.pathname === '/app.js' || url.pathname === '/style.css' || url.pathname === '/' || url.pathname.endsWith('.html')) {
     event.respondWith(fetch(request, { cache: 'no-store', credentials: 'same-origin' }));
     return;
   }
