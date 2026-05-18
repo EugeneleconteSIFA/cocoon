@@ -5,14 +5,29 @@
 set -euo pipefail
 
 INSTALL_DIR="${JTTOF_DIR:-/opt/jttof}"
+JTTOF_USER="${JTTOF_USER:-jttof}"
 
 cd "$INSTALL_DIR"
 
-if [[ -d .git ]]; then
-  sudo -u jttof git pull --ff-only
+# Corrige les droits si le clone a été fait en root
+if [[ $EUID -eq 0 ]] && id -u "$JTTOF_USER" &>/dev/null; then
+  chown -R "${JTTOF_USER}:${JTTOF_USER}" "$INSTALL_DIR"
+  sudo -u "$JTTOF_USER" git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
 fi
 
-sudo -u jttof "$INSTALL_DIR/.venv/bin/pip" install -r "$INSTALL_DIR/backend/requirements.txt" -q
+if [[ -d .git ]]; then
+  if id -u "$JTTOF_USER" &>/dev/null; then
+    sudo -u "$JTTOF_USER" git -C "$INSTALL_DIR" pull --ff-only
+  else
+    git pull --ff-only
+  fi
+fi
+
+if id -u "$JTTOF_USER" &>/dev/null; then
+  sudo -u "$JTTOF_USER" "$INSTALL_DIR/.venv/bin/pip" install -r "$INSTALL_DIR/backend/requirements.txt" -q
+else
+  "$INSTALL_DIR/.venv/bin/pip" install -r "$INSTALL_DIR/backend/requirements.txt" -q
+fi
 
 systemctl restart jttof
 sleep 1

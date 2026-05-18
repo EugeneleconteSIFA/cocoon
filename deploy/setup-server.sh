@@ -26,6 +26,8 @@ fi
 
 mkdir -p "$INSTALL_DIR/data" "$INSTALL_DIR/backups"
 chown -R jttof:jttof "$INSTALL_DIR"
+sudo -u jttof git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
 
 # Venv + dépendances
 if [[ ! -d "$INSTALL_DIR/.venv" ]]; then

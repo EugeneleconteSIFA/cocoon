@@ -130,7 +130,15 @@ cd /opt/jttof
 sudo bash deploy/update.sh
 ```
 
-(`git pull` + `pip install` + `systemctl restart jttof`)
+(`chown jttof` + `git pull` + `pip install` + `systemctl restart jttof`)
+
+Si `Permission denied` sur `.git/` (clone fait en root) :
+
+```bash
+chown -R jttof:jttof /opt/jttof
+git config --global --add safe.directory /opt/jttof
+cd /opt/jttof && sudo bash deploy/update.sh
+```
 
 ## Fichiers utiles
 
