@@ -4,13 +4,14 @@
  *              network-first pour les appels API (/api/*).
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v1';
+const CACHE_NAME = 'cocon-v2';
 
 const SHELL_ASSETS = [
   '/',
   '/style.css',
   '/app.js',
   '/manifest.json',
+  '/icons/favicon-32.png',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',

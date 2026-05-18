@@ -8,7 +8,8 @@
   <title>Cocon — notre carnet à deux</title>
 
   <!-- PWA -->
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" />
+  <link rel="icon" href="/icons/favicon-32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -405,8 +406,6 @@
 
     <!-- Register -->
     <form class="modal__form" data-auth-form="register" hidden novalidate>
-      <label class="form-label" for="reg-name">Ton prénom</label>
-      <input class="form-input" id="reg-name" type="text" autocomplete="given-name" placeholder="Eugène" required />
       <label class="form-label" for="reg-email">Email</label>
       <input class="form-input" id="reg-email" type="email" inputmode="email" autocomplete="email" placeholder="ton@email.fr" required />
       <label class="form-label" for="reg-password">Mot de passe</label>

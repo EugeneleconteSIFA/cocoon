@@ -198,6 +198,8 @@
     async submitLogin(form) {
       const email = form.querySelector('#login-email').value.trim();
       const password = form.querySelector('#login-password').value;
+      if (!email) { this._showError('Merci d\'entrer ton adresse email.'); return; }
+      if (!password) { this._showError('Merci d\'entrer ton mot de passe.'); return; }
       try {
         const data = await apiForm('/api/auth/login', { username: email, password });
         session.save(data.access_token, data.user);
@@ -208,11 +210,13 @@
       } catch (e) { this._showError(e.message); }
     },
     async submitRegister(form) {
-      const name = form.querySelector('#reg-name').value.trim();
       const email = form.querySelector('#reg-email').value.trim();
       const password = form.querySelector('#reg-password').value;
+      if (!email) { this._showError('Merci d\'entrer ton adresse email.'); return; }
+      if (password.length < 6) { this._showError('Le mot de passe doit faire au moins 6 caractères.'); return; }
+      const display_name = email.split('@')[0];
       try {
-        const data = await api('POST', '/api/auth/register', { email, password, display_name: name });
+        const data = await api('POST', '/api/auth/register', { email, password, display_name });
         session.save(data.access_token, data.user);
         this.close();
         await coconBar.load();
@@ -1681,10 +1685,13 @@
     coconBar.bind();
 
     // Si déjà connecté au démarrage, charger le bandeau + les piliers
+    // Sinon, ouvrir directement le modal de connexion
     if (session.isLoggedIn()) {
       coconBar.load().then(() => {
         if (session.getCoconId()) reloadAllPillars();
       });
+    } else {
+      authModal.open();
     }
 
     // ─── Toggle dark mode ────────────────────────────────────────

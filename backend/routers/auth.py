@@ -28,7 +28,7 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     user = models.User(
         email=payload.email,
         hashed_password=auth.hash_password(payload.password),
-        display_name=payload.display_name,
+        display_name=payload.display_name or payload.email.split('@')[0],
     )
     db.add(user)
     db.commit()
