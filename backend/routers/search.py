@@ -47,7 +47,7 @@ def _wrap_http_call(func, *args, label: str, **kwargs):
             detail = (
                 "Google Places refuse la clé API (403). Dans Google Cloud : "
                 "activer « Places API (New) », facturation activée, "
-                "restriction IP du serveur (168.231.85.64)."
+                "restriction IP du serveur (168.231.85.64 en IPv4 ; le VPS peut sortir en IPv6)."
             )
             if extra:
                 detail += f" Détail Google : {extra}"

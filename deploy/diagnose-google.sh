@@ -28,7 +28,7 @@ curl -sS --max-time 5 https://api.ipify.org || echo "(ipify injoignable)"
 echo ""
 
 echo "→ Appel direct Places API (New)…"
-RESP=$(curl -sS -w "\n__HTTP__%{http_code}" -X POST "https://places.googleapis.com/v1/places:searchText" \
+RESP=$(curl -4 -sS -w "\n__HTTP__%{http_code}" -X POST "https://places.googleapis.com/v1/places:searchText" \
   -H "Content-Type: application/json" \
   -H "X-Goog-Api-Key: ${KEY}" \
   -H "X-Goog-FieldMask: places.displayName,places.id" \

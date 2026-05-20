@@ -61,6 +61,15 @@ def _api_key() -> str:
     return k
 
 
+def _http_client(**kwargs: Any) -> httpx.Client:
+    """Client sortant en IPv4 (le VPS Hostinger utilise IPv6 par défaut).
+
+    Sans ça, Google voit 2a02:4780:7:753::1 alors que la clé est restreinte
+    à 168.231.85.64 → 403.
+    """
+    return httpx.Client(timeout=10.0, local_address="0.0.0.0", **kwargs)
+
+
 # ─── Helpers ────────────────────────────────────────────────────────
 # Mapping Places `types` → catégorie lisible en français.
 # On garde les plus utiles, le reste tombera en fallback formaté.
@@ -186,7 +195,7 @@ def search_text(query: str) -> list[dict[str, Any]]:
     }
     body = {"textQuery": query, "languageCode": "fr"}
 
-    with httpx.Client(timeout=10.0) as c:
+    with _http_client() as c:
         r = c.post(f"{PLACES_BASE}/places:searchText", headers=headers, json=body)
         r.raise_for_status()
         payload = r.json()
@@ -218,7 +227,7 @@ def get_details(place_id: str) -> dict[str, Any]:
         "X-Goog-FieldMask": _DETAILS_FIELDS,
     }
 
-    with httpx.Client(timeout=10.0) as c:
+    with _http_client() as c:
         r = c.get(
             _place_detail_url(place_id),
             headers=headers,

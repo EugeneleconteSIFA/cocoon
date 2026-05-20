@@ -19,7 +19,8 @@ Dans [Google Cloud Console](https://console.cloud.google.com/) → APIs & Servic
 
 1. **Activer** : *Places API (New)* (et la facturation du projet).
 2. **Credentials** → ta clé `GOOGLE_MAPS_API_KEY` :
-   - *Application restrictions* → **IP addresses** → `168.231.85.64` (IP du VPS).
+   - *Application restrictions* → **IP addresses** → `168.231.85.64` (IPv4 du VPS).
+   - Le VPS sort aussi en IPv6 (`2a02:4780:7:753::1`) — soit l’ajouter dans Google, soit laisser le backend forcer l’IPv4 (déjà le cas depuis `gplaces.py`).
    - *API restrictions* → inclure au minimum **Places API (New)**.
 3. Sur le VPS : `grep GOOGLE_MAPS_API_KEY /opt/jttof/backend/.env` — la clé doit être celle du même projet.
 4. Redémarrer : `sudo systemctl restart jttof`, puis tester :
