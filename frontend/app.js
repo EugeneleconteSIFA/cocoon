@@ -402,7 +402,7 @@
       document.querySelector('[data-action="close-help"]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-help-backdrop]')?.addEventListener('click', () => this.close());
       document.querySelector('[data-help-faq]')?.addEventListener('toggle', (e) => {
-        const item = e.target.closest('.help-faq__item, .help-faq__sub');
+        const item = e.target.closest('.help-faq__item');
         if (!item?.open) return;
         requestAnimationFrame(() => {
           item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });

@@ -224,7 +224,8 @@ body {
 .app--guest .views {
   padding: var(--space-3) var(--space-4);
   padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .app--guest .tabbar {
@@ -293,7 +294,7 @@ body {
 
 .welcome__title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(28px, 8vw, 36px);
+  font-size: clamp(32px, 9vw, 40px);
   font-weight: 400;
   color: var(--peony);
   line-height: 1.05;
@@ -303,18 +304,18 @@ body {
 
 .welcome__tagline {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 15px;
+  font-size: 17px;
   font-style: italic;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.2;
+  line-height: 1.25;
   margin: 0 0 var(--space-3);
 }
 
 .welcome__lead {
   font-family: 'Lora', serif;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 15px;
+  line-height: 1.5;
   color: var(--ink);
   margin: 0;
   text-align: center;
@@ -322,7 +323,7 @@ body {
 
 .welcome__pillars {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-3);
   width: 100%;
   list-style: none;
@@ -335,10 +336,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-3) var(--space-2);
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-3);
   background: var(--ivory);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-1);
 }
 
@@ -346,22 +348,22 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   color: var(--rose);
 }
 
 .welcome__pillar-icon .icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .welcome__pillar-name {
   font-family: 'Lora', serif;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ink);
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .welcome__actions {
@@ -377,25 +379,26 @@ body {
 .welcome__cta-secondary {
   flex: 1;
   min-width: 0;
-  padding: 11px 14px;
-  font-size: 14px;
+  padding: 12px 16px;
+  font-size: 15px;
 }
 
 .welcome__join-block {
   width: 100%;
-  padding-top: var(--space-2);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--line-copper);
   flex-shrink: 0;
 }
 
 .welcome__join-kicker {
   font-family: 'Lora', serif;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--copper);
-  margin: 0 0 var(--space-2);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--peony);
+  margin: 0 0 var(--space-3);
 }
 
 .welcome__join {
@@ -411,8 +414,8 @@ body {
 .welcome__join-input.form-input--mono {
   flex: 1;
   min-width: 0;
-  padding: 8px var(--space-3);
-  font-size: 13px;
+  padding: 10px var(--space-3);
+  font-size: 14px;
   letter-spacing: 0.08em;
   text-align: center;
   text-transform: uppercase;
@@ -420,8 +423,8 @@ body {
 
 .welcome__join-btn {
   flex-shrink: 0;
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 10px 16px;
+  font-size: 14px;
   white-space: nowrap;
 }
 
@@ -438,41 +441,49 @@ body {
   }
 
   .welcome__title {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .welcome__tagline {
-    font-size: 14px;
-    margin-bottom: var(--space-1);
+    font-size: 15px;
+    margin-bottom: var(--space-2);
   }
 
   .welcome__lead {
-    font-size: 12px;
-    line-height: 1.35;
+    font-size: 14px;
+    line-height: 1.4;
   }
 
   .welcome__pillar {
-    padding: 6px 2px;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .welcome__pillar-name {
+    font-size: 12px;
   }
 
   .welcome__pillar-icon {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
   }
 
   .welcome__pillar-icon .icon {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
   }
 
   .welcome__cta,
   .welcome__cta-secondary {
-    padding: 9px 10px;
-    font-size: 13px;
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .welcome__join-kicker {
+    font-size: 12px;
   }
 
   .welcome__join-block {
-    padding-top: var(--space-1);
+    padding-top: var(--space-3);
   }
 }
 
@@ -1631,16 +1642,11 @@ body {
   gap: var(--space-2);
 }
 
-.help-faq__item,
-.help-faq__sub {
+.help-faq__item {
   border: 1px solid rgba(201, 152, 120, 0.25);
   border-radius: var(--radius);
   background: var(--ivory);
   overflow: hidden;
-}
-
-.help-faq__sub {
-  margin-top: var(--space-2);
 }
 
 .help-faq__trigger {
@@ -1672,11 +1678,6 @@ body {
   background: rgba(216, 154, 154, 0.08);
 }
 
-.help-faq__trigger--sub {
-  font-size: 14px;
-  padding: var(--space-2) var(--space-3);
-}
-
 .help-faq__chevron {
   width: 18px;
   height: 18px;
@@ -1685,8 +1686,7 @@ body {
   transition: transform 220ms var(--ease);
 }
 
-.help-faq__item[open] > .help-faq__trigger .help-faq__chevron,
-.help-faq__sub[open] > .help-faq__trigger .help-faq__chevron {
+.help-faq__item[open] > .help-faq__trigger .help-faq__chevron {
   transform: rotate(90deg);
 }
 
@@ -1700,9 +1700,42 @@ body {
   margin-top: 0;
 }
 
-.help-faq__sub .help-steps {
-  padding: 0 var(--space-3) var(--space-3);
+.help-platform {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  background: var(--paper);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(201, 152, 120, 0.2);
+}
+
+.help-platform:first-of-type {
+  margin-top: var(--space-2);
+}
+
+.help-platform__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.help-platform__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--ink-soft);
+}
+
+.help-platform__label {
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.help-platform .help-steps {
   margin: 0;
+  padding-left: 1.2em;
 }
 
 .help-list {

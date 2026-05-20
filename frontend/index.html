@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=20" />
+  <link rel="stylesheet" href="/style.css?v=22" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -202,6 +202,22 @@
           <polyline points="18 4 21 7 18 10" />
           <polyline points="18 14 21 17 18 20" />
         </g>
+      </symbol>
+
+      <!-- Apple -->
+      <symbol id="i-apple" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4-2.35-2.36-2.7-6.03-1.2-9.14 1.16-2.25 3.22-3.66 5.4-3.66.88 0 1.74.24 2.53.74-.02.15-.04.3-.07.45-.98-.24-1.96-.12-2.84.35-1.18.62-2.03 1.78-2.2 3.2 1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
+        />
+      </symbol>
+
+      <!-- Android -->
+      <symbol id="i-android" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          d="M6.5 11.5c0-3.03 2.47-5.5 5.5-5.5s5.5 2.47 5.5 5.5v5c0 .83-.67 1.5-1.5 1.5h-8c-.83 0-1.5-.67-1.5-1.5v-5zm12.1-4.18 1.84-3.18a.5.5 0 0 0-.87-.5l-1.87 3.24c-1.03-.45-2.17-.7-3.37-.7s-2.34.25-3.37.7L8.66 3.64a.5.5 0 0 0-.87.5l1.84 3.18C6.41 8.22 5 10.51 5 13h14c0-2.49-1.41-4.78-3.4-6.68zM9 14.5c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm6 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"
+        />
       </symbol>
     </defs>
   </svg>
@@ -695,21 +711,12 @@
       <div class="help-faq" data-help-faq>
         <details class="help-faq__item" open>
           <summary class="help-faq__trigger">
-            <span>C'est quoi Cocon ?</span>
+            <span>Cocon, c'est quoi ?</span>
             <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </summary>
           <div class="help-faq__panel">
-            <p>Vos envies à deux au même endroit : films, restos, voyages, recettes. Vous tapez, vous choisissez — c'est noté. Pas de gros formulaires.</p>
-          </div>
-        </details>
-
-        <details class="help-faq__item">
-          <summary class="help-faq__trigger">
-            <span>Votre cocon</span>
-            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-          </summary>
-          <div class="help-faq__panel">
-            <p>Créez un cocon, invitez votre partenaire avec le code : tout est partagé. Plusieurs cocons possibles.</p>
+            <p>Vos envies à deux au même endroit : films, restos, voyages, recettes. Vous tapez, vous choisissez — c'est noté.</p>
+            <p>Créez un cocon, invitez votre partenaire avec le code : tout est partagé. Plusieurs cocons possibles — changez-en via le nom en haut à gauche.</p>
           </div>
         </details>
 
@@ -720,27 +727,28 @@
           </summary>
           <div class="help-faq__panel">
             <p class="help-note">Comme une app sur l'écran d'accueil, sans passer par le store.</p>
-            <details class="help-faq__sub">
-              <summary class="help-faq__trigger help-faq__trigger--sub">
-                <span>🍎 iPhone · Safari</span>
-                <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-              </summary>
+
+            <div class="help-platform">
+              <div class="help-platform__head">
+                <svg class="help-platform__icon" aria-hidden="true"><use href="#i-apple" /></svg>
+                <span class="help-platform__label">iPhone · Safari</span>
+              </div>
               <ol class="help-steps">
                 <li>Safari → <strong>Partager</strong> <span class="help-steps__icon" aria-hidden="true">□↑</span></li>
                 <li><strong>Sur l'écran d'accueil</strong> → confirmer.</li>
               </ol>
-            </details>
+            </div>
 
-            <details class="help-faq__sub">
-              <summary class="help-faq__trigger help-faq__trigger--sub">
-                <span>🤖 Android · Chrome</span>
-                <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-              </summary>
+            <div class="help-platform">
+              <div class="help-platform__head">
+                <svg class="help-platform__icon" aria-hidden="true"><use href="#i-android" /></svg>
+                <span class="help-platform__label">Android · Chrome</span>
+              </div>
               <ol class="help-steps">
                 <li>Chrome → menu <strong>⋮</strong></li>
                 <li><strong>Installer l'application</strong> (ou ajouter à l'écran d'accueil).</li>
               </ol>
-            </details>
+            </div>
 
             <p class="help-note help-note--tip">Hors connexion : vous gardez ce qui est déjà ajouté.</p>
           </div>
