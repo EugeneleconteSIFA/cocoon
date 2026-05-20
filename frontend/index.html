@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=18" />
+  <link rel="stylesheet" href="/style.css?v=19" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -693,78 +693,78 @@
 
     <div class="help-prose">
       <p class="help-tagline"><em>Notre carnet à deux.</em></p>
-      <p>
-        <strong>Cocon</strong>, c'est l'endroit où vos envies à deux finissent par rester :
-        le film dont vous parliez sur le canapé, le resto repéré en balade, l'idée de week-end,
-        la recette à tester un dimanche pluvieux.
-      </p>
-      <p>
-        Pas de formulaires interminables, pas de todo-list froide — juste un carnet doux
-        où vous déposez une idée en deux clics et où vous retrouvez tout plus tard.
-      </p>
 
-      <section class="modal__section">
-        <h3 class="modal__section-label">Comment s'en servir</h3>
-        <ul class="help-list">
-          <li><strong>Culture</strong> — tapez quelques lettres, choisissez l'affiche, c'est ajouté.</li>
-          <li><strong>Lieux</strong> — cherchez un endroit, la fiche arrive avec photo et adresse.</li>
-          <li><strong>Activités</strong> — une courte phrase suffit pour garder l'envie.</li>
-          <li><strong>Cuisine</strong> — une recette, un lien, ou quelques mots : on s'en souvient.</li>
-        </ul>
-        <p class="help-note">
-          Le bouton <strong>+</strong> en bas ajoute dans l'onglet ouvert.
-          Le <strong>tirage au sort</strong> propose une idée quand vous ne savez pas quoi faire ce soir.
-          Touchez une carte pour la marquer « fait ensemble » ou la ranger.
-        </p>
-      </section>
+      <div class="help-faq" data-help-faq>
+        <details class="help-faq__item" open>
+          <summary class="help-faq__trigger">
+            <span>C'est quoi Cocon ?</span>
+            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </summary>
+          <div class="help-faq__panel">
+            <p>Vos envies à deux au même endroit : films, restos, voyages, recettes. Vous tapez, vous choisissez — c'est noté. Pas de gros formulaires.</p>
+          </div>
+        </details>
 
-      <section class="modal__section">
-        <h3 class="modal__section-label">Votre cocon</h3>
-        <p>
-          Créez un cocon à deux, invitez l'autre avec le code, et tout ce que vous ajoutez
-          apparaît pour vous deux. Vous pouvez en avoir plusieurs (amis, famille…) et changer
-          de cocon depuis le nom en haut à gauche.
-        </p>
-      </section>
+        <details class="help-faq__item">
+          <summary class="help-faq__trigger">
+            <span>Comment s'en servir</span>
+            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </summary>
+          <div class="help-faq__panel">
+            <ul class="help-list">
+              <li><strong>Culture</strong> — quelques lettres, l'affiche, c'est ajouté.</li>
+              <li><strong>Lieux</strong> — un nom, photo et adresse incluses.</li>
+              <li><strong>Activités</strong> — une courte phrase suffit.</li>
+              <li><strong>Cuisine</strong> — titre, lien ou quelques mots.</li>
+            </ul>
+            <p class="help-note"><strong>+</strong> en bas pour ajouter · <strong>tirage au sort</strong> pour décider · carte = « fait ensemble ».</p>
+          </div>
+        </details>
 
-      <section class="modal__section">
-        <h3 class="modal__section-label">Sur votre téléphone</h3>
-        <p class="help-install-intro">
-          Cocon fonctionne dans le navigateur, mais vous pouvez l'installer comme une vraie app
-          sur l'écran d'accueil — pratique depuis le canapé.
-        </p>
+        <details class="help-faq__item">
+          <summary class="help-faq__trigger">
+            <span>Votre cocon</span>
+            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </summary>
+          <div class="help-faq__panel">
+            <p>Créez un cocon, invitez l'autre avec le code : tout est partagé. Plusieurs cocons possibles — changez via le nom en haut à gauche.</p>
+          </div>
+        </details>
 
-        <div class="help-install">
-          <h4 class="help-install__platform">
-            <span class="help-install__badge" aria-hidden="true">🍎</span>
-            iPhone (Safari)
-          </h4>
-          <ol class="help-steps">
-            <li>Ouvrez cette page dans <strong>Safari</strong> (pas dans une autre app).</li>
-            <li>Touchez <strong>Partager</strong> <span class="help-steps__icon" aria-hidden="true">□↑</span> en bas de l'écran.</li>
-            <li>Choisissez <strong>Sur l'écran d'accueil</strong> (ou « Ajouter à l'écran d'accueil »).</li>
-            <li>Confirmez — l'icône rose <strong>Cocon</strong> apparaît comme une app à part entière.</li>
-          </ol>
-        </div>
+        <details class="help-faq__item">
+          <summary class="help-faq__trigger">
+            <span>Installer sur le téléphone</span>
+            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+          </summary>
+          <div class="help-faq__panel">
+            <p class="help-note">Comme une app sur l'écran d'accueil, sans passer par le store.</p>
 
-        <div class="help-install">
-          <h4 class="help-install__platform">
-            <span class="help-install__badge" aria-hidden="true">🤖</span>
-            Android (Chrome)
-          </h4>
-          <ol class="help-steps">
-            <li>Ouvrez cette page dans <strong>Chrome</strong>.</li>
-            <li>Touchez le menu <strong>⋮</strong> en haut à droite.</li>
-            <li>Choisissez <strong>Installer l'application</strong> ou <strong>Ajouter à l'écran d'accueil</strong>.</li>
-            <li>Validez — Cocon se lance ensuite en plein écran, sans barre d'adresse.</li>
-          </ol>
-        </div>
+            <details class="help-faq__sub">
+              <summary class="help-faq__trigger help-faq__trigger--sub">
+                <span><span aria-hidden="true">🍎</span> iPhone · Safari</span>
+                <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </summary>
+              <ol class="help-steps">
+                <li>Safari → <strong>Partager</strong> <span class="help-steps__icon" aria-hidden="true">□↑</span></li>
+                <li><strong>Sur l'écran d'accueil</strong> → confirmer.</li>
+              </ol>
+            </details>
 
-        <p class="help-note help-note--tip">
-          Astuce : une fois installée, l'app reste accessible même hors connexion pour parcourir
-          ce que vous avez déjà ajouté.
-        </p>
-      </section>
+            <details class="help-faq__sub">
+              <summary class="help-faq__trigger help-faq__trigger--sub">
+                <span><span aria-hidden="true">🤖</span> Android · Chrome</span>
+                <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+              </summary>
+              <ol class="help-steps">
+                <li>Chrome → menu <strong>⋮</strong></li>
+                <li><strong>Installer l'application</strong> (ou ajouter à l'écran d'accueil).</li>
+              </ol>
+            </details>
+
+            <p class="help-note help-note--tip">Hors connexion : vous gardez ce qui est déjà ajouté.</p>
+          </div>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -788,7 +788,7 @@
     <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
   </div>
 
-  <script src="/app.js?v=17" defer></script>
+  <script src="/app.js?v=19" defer></script>
   <!-- PWA : SW uniquement en local ou HTTPS -->
   <script>
     (function () {
