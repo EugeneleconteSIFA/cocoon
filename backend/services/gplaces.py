@@ -61,13 +61,14 @@ def _api_key() -> str:
     return k
 
 
-def _http_client(**kwargs: Any) -> httpx.Client:
+def _http_client(timeout: float = 10.0) -> httpx.Client:
     """Client sortant en IPv4 (le VPS Hostinger utilise IPv6 par défaut).
 
     Sans ça, Google voit 2a02:4780:7:753::1 alors que la clé est restreinte
     à 168.231.85.64 → 403.
     """
-    return httpx.Client(timeout=10.0, local_address="0.0.0.0", **kwargs)
+    transport = httpx.HTTPTransport(local_address="0.0.0.0")
+    return httpx.Client(transport=transport, timeout=timeout)
 
 
 # ─── Helpers ────────────────────────────────────────────────────────
