@@ -1625,11 +1625,84 @@ body {
   margin-bottom: 0;
 }
 
-.help-tagline {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 17px;
+.help-faq {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.help-faq__item,
+.help-faq__sub {
+  border: 1px solid rgba(201, 152, 120, 0.25);
+  border-radius: var(--radius);
+  background: var(--ivory);
+  overflow: hidden;
+}
+
+.help-faq__sub {
+  margin-top: var(--space-2);
+}
+
+.help-faq__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-family: 'Lora', serif;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+  transition: color var(--t) var(--ease), background var(--t) var(--ease);
+}
+
+.help-faq__trigger::-webkit-details-marker {
+  display: none;
+}
+
+.help-faq__trigger::marker {
+  content: '';
+}
+
+.help-faq__trigger:hover {
   color: var(--peony);
-  margin-bottom: var(--space-4) !important;
+  background: rgba(216, 154, 154, 0.08);
+}
+
+.help-faq__trigger--sub {
+  font-size: 14px;
+  padding: var(--space-2) var(--space-3);
+}
+
+.help-faq__chevron {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--copper);
+  transition: transform 220ms var(--ease);
+}
+
+.help-faq__item[open] > .help-faq__trigger .help-faq__chevron,
+.help-faq__sub[open] > .help-faq__trigger .help-faq__chevron {
+  transform: rotate(90deg);
+}
+
+.help-faq__panel {
+  padding: 0 var(--space-4) var(--space-4);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.help-faq__panel > p:first-child {
+  margin-top: 0;
+}
+
+.help-faq__sub .help-steps {
+  padding: 0 var(--space-3) var(--space-3);
+  margin: 0;
 }
 
 .help-list {

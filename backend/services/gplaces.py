@@ -129,6 +129,16 @@ def _city(components: list[dict[str, Any]] | None) -> str | None:
     return None
 
 
+def _place_detail_url(place_id: str) -> str:
+    """URL GET Place Details — l'API renvoie des id au format `places/ChIJ…`."""
+    pid = (place_id or "").strip()
+    if not pid:
+        raise ValueError("place_id manquant")
+    if pid.startswith("places/"):
+        return f"{PLACES_BASE}/{pid}"
+    return f"{PLACES_BASE}/places/{pid}"
+
+
 def _rating(value: Any) -> float | None:
     if value is None:
         return None
@@ -203,9 +213,6 @@ def search_text(query: str) -> list[dict[str, Any]]:
 
 def get_details(place_id: str) -> dict[str, Any]:
     """Détails enrichis, avec photo (1ʳᵉ disponible)."""
-    if not place_id:
-        raise ValueError("place_id manquant")
-
     headers = {
         "X-Goog-Api-Key": _api_key(),
         "X-Goog-FieldMask": _DETAILS_FIELDS,
@@ -213,7 +220,7 @@ def get_details(place_id: str) -> dict[str, Any]:
 
     with httpx.Client(timeout=10.0) as c:
         r = c.get(
-            f"{PLACES_BASE}/places/{place_id}",
+            _place_detail_url(place_id),
             headers=headers,
             params={"languageCode": "fr"},
         )
@@ -227,9 +234,13 @@ def get_details(place_id: str) -> dict[str, Any]:
             if photo_name:
                 photo_url = _resolve_photo_uri(c, photo_name)
 
+    name = _name(p.get("displayName"))
+    if not name:
+        raise ValueError("Lieu introuvable ou sans nom.")
+
     return {
         "gplaces_id": p.get("id"),
-        "name": _name(p.get("displayName")),
+        "name": name,
         "address": p.get("formattedAddress"),
         "city": _city(p.get("addressComponents")),
         "category": _category(p.get("types")),

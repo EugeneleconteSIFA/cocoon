@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=19" />
+  <link rel="stylesheet" href="/style.css?v=20" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -685,15 +685,13 @@
   <div class="modal-backdrop" data-help-backdrop hidden></div>
   <div class="modal modal--help" data-help-modal role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
     <div class="modal__header">
-      <h2 class="modal__title" id="help-title">Notre petit carnet</h2>
+      <h2 class="modal__title" id="help-title">Cocon — notre petit carnet</h2>
       <button class="icon-button modal__close" type="button" data-action="close-help" aria-label="Fermer">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
 
     <div class="help-prose">
-      <p class="help-tagline"><em>Notre carnet à deux.</em></p>
-
       <div class="help-faq" data-help-faq>
         <details class="help-faq__item" open>
           <summary class="help-faq__trigger">
@@ -707,27 +705,11 @@
 
         <details class="help-faq__item">
           <summary class="help-faq__trigger">
-            <span>Comment s'en servir</span>
-            <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
-          </summary>
-          <div class="help-faq__panel">
-            <ul class="help-list">
-              <li><strong>Culture</strong> — quelques lettres, l'affiche, c'est ajouté.</li>
-              <li><strong>Lieux</strong> — un nom, photo et adresse incluses.</li>
-              <li><strong>Activités</strong> — une courte phrase suffit.</li>
-              <li><strong>Cuisine</strong> — titre, lien ou quelques mots.</li>
-            </ul>
-            <p class="help-note"><strong>+</strong> en bas pour ajouter · <strong>tirage au sort</strong> pour décider · carte = « fait ensemble ».</p>
-          </div>
-        </details>
-
-        <details class="help-faq__item">
-          <summary class="help-faq__trigger">
             <span>Votre cocon</span>
             <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
           </summary>
           <div class="help-faq__panel">
-            <p>Créez un cocon, invitez l'autre avec le code : tout est partagé. Plusieurs cocons possibles — changez via le nom en haut à gauche.</p>
+            <p>Créez un cocon, invitez votre partenaire avec le code : tout est partagé. Plusieurs cocons possibles.</p>
           </div>
         </details>
 
@@ -738,10 +720,9 @@
           </summary>
           <div class="help-faq__panel">
             <p class="help-note">Comme une app sur l'écran d'accueil, sans passer par le store.</p>
-
             <details class="help-faq__sub">
               <summary class="help-faq__trigger help-faq__trigger--sub">
-                <span><span aria-hidden="true">🍎</span> iPhone · Safari</span>
+                <span>🍎 iPhone · Safari</span>
                 <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </summary>
               <ol class="help-steps">
@@ -752,7 +733,7 @@
 
             <details class="help-faq__sub">
               <summary class="help-faq__trigger help-faq__trigger--sub">
-                <span><span aria-hidden="true">🤖</span> Android · Chrome</span>
+                <span>🤖 Android · Chrome</span>
                 <svg class="help-faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
               </summary>
               <ol class="help-steps">

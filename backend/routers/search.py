@@ -76,11 +76,17 @@ def search_place(
 
 
 @router.get(
-    "/place/{place_id}",
+    "/place/details",
     summary="Détails enrichis d'un lieu (avec photo)",
 )
-def details_place(place_id: str = Path(..., min_length=1)):
-    """Renvoie un objet prêt à POSTer sur `/api/lieux`, avec photo_url."""
+def details_place(
+    place_id: str = Query(..., min_length=1, description="Identifiant Google (`places/ChIJ…`)"),
+):
+    """Renvoie un objet prêt à POSTer sur `/api/lieux`, avec photo_url.
+
+    Query param (et non segment d'URL) : les ids Google contiennent un `/`
+    (`places/ChIJ…`) qui casse le routage FastAPI/Nginx en path variable.
+    """
     return _wrap_http_call(gplaces.get_details, place_id, label="Google Places")
 
 

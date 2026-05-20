@@ -1565,7 +1565,10 @@
       if (!requireCocon()) return;
       btn.classList.add('is-loading');
       try {
-        const details = await api('GET', `/api/search/place/${encodeURIComponent(btn.dataset.placeId)}`);
+        const details = await api(
+          'GET',
+          `/api/search/place/details?place_id=${encodeURIComponent(btn.dataset.placeId)}`
+        );
         await api('POST', '/api/lieux', { ...details, section: lieux.section });
         this.closeAdd();
         await this.load();
