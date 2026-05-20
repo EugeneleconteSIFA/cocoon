@@ -22,7 +22,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=17" />
+  <link rel="stylesheet" href="/style.css?v=18" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -275,15 +275,8 @@
         <header class="welcome__hero">
           <h1 class="welcome__title" id="welcome-title">Cocon</h1>
           <p class="welcome__tagline">Notre carnet à deux.</p>
-
-          <div class="welcome__divider" aria-hidden="true">
-            <span class="welcome__divider-line"></span>
-            <svg class="welcome__divider-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
-            <span class="welcome__divider-line"></span>
-          </div>
-
           <p class="welcome__lead">
-            Le carnet où on garde nos envies partagées — films, lieux, idées et recettes — pour ne plus rien oublier sur le canapé.
+            Nos envies partagées — films, lieux, activités et cuisine — pour ne plus rien oublier.
           </p>
         </header>
 
@@ -292,28 +285,25 @@
             <span class="welcome__pillar-icon" aria-hidden="true">
               <svg class="icon"><use href="#i-culture" /></svg>
             </span>
-            <span class="welcome__pillar-name">Films &amp; séries</span>
+            <span class="welcome__pillar-name">Culture</span>
           </li>
           <li class="welcome__pillar">
             <span class="welcome__pillar-icon" aria-hidden="true">
               <svg class="icon"><use href="#i-lieux" /></svg>
             </span>
-            <span class="welcome__pillar-name">Où aller</span>
-            <span class="welcome__pillar-hint">Idées de voyages &amp; et bons plans prêts de chez nous</span>
+            <span class="welcome__pillar-name">Lieux</span>
           </li>
           <li class="welcome__pillar">
             <span class="welcome__pillar-icon" aria-hidden="true">
               <svg class="icon"><use href="#i-activites" /></svg>
             </span>
             <span class="welcome__pillar-name">Activités</span>
-            <span class="welcome__pillar-hint">À faire à deux</span>
           </li>
           <li class="welcome__pillar">
             <span class="welcome__pillar-icon" aria-hidden="true">
               <svg class="icon"><use href="#i-cuisine" /></svg>
             </span>
             <span class="welcome__pillar-name">Cuisine</span>
-            <span class="welcome__pillar-hint">Recettes &amp; envies</span>
           </li>
         </ul>
 
@@ -324,24 +314,25 @@
           <button class="btn btn-ghost welcome__cta-secondary" type="button" data-action="open-auth" data-auth-tab="register">
             Créer un compte
           </button>
-          <p class="welcome__hint">Privé, pour nous deux. On ajoute en deux clics, on coche quand c'est fait.</p>
         </div>
 
         <div class="welcome__join-block">
           <p class="welcome__join-kicker">Déjà invité·e ?</p>
           <form class="welcome__join" data-guest-join-form novalidate>
-            <label class="welcome__join-label" for="guest-join-code">Code d'invitation</label>
-            <input
-              class="form-input form-input--mono welcome__join-input"
-              id="guest-join-code"
-              type="text"
-              data-guest-join-code
-              placeholder="Colle le ici"
-              autocomplete="off"
-              spellcheck="false"
-              enterkeyhint="go"
-            />
-            <button class="btn btn-ghost welcome__join-btn" type="submit">Rejoindre un cocon</button>
+            <label class="visually-hidden" for="guest-join-code">Code d'invitation</label>
+            <div class="welcome__join-row">
+              <input
+                class="form-input form-input--mono welcome__join-input"
+                id="guest-join-code"
+                type="text"
+                data-guest-join-code
+                placeholder="Code d'invitation"
+                autocomplete="off"
+                spellcheck="false"
+                enterkeyhint="go"
+              />
+              <button class="btn btn-ghost welcome__join-btn" type="submit">Rejoindre</button>
+            </div>
           </form>
         </div>
       </section>

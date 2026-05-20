@@ -87,6 +87,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Accessibilité : label masqué visuellement */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ─── 3. Layout général ────────────────────────────────────────── */
 .app {
   display: flex;
@@ -209,10 +222,9 @@ body {
 }
 
 .app--guest .views {
-  padding-top: var(--space-5);
-  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  padding: var(--space-2) var(--space-4);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
 }
 
 .app--guest .tabbar {
@@ -253,19 +265,21 @@ body {
   color: var(--ink);
 }
 
-/* ─── 7b. Accueil invité ───────────────────────────────────────── */
+/* ─── 7b. Accueil invité (tient sur un écran mobile sans scroll) ─ */
 .welcome {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   text-align: center;
-  gap: var(--space-6);
+  gap: var(--space-3);
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
-  padding: var(--space-4) 0 var(--space-7);
+  padding: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .welcome[hidden] {
@@ -274,56 +288,33 @@ body {
 
 .welcome__hero {
   width: 100%;
+  flex-shrink: 0;
 }
 
 .welcome__title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(36px, 10vw, 44px);
+  font-size: clamp(28px, 8vw, 36px);
   font-weight: 400;
   color: var(--peony);
-  line-height: 1.1;
+  line-height: 1.05;
   letter-spacing: -0.5px;
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-1);
 }
 
 .welcome__tagline {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 18px;
+  font-size: 15px;
   font-style: italic;
   font-weight: 400;
   color: var(--ink-soft);
-  line-height: 1.3;
-  margin: 0 0 var(--space-5);
-}
-
-.welcome__divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-}
-
-.welcome__divider-line {
-  flex: 1;
-  max-width: 72px;
-  height: 1px;
-  background: var(--copper);
-  opacity: 0.4;
-}
-
-.welcome__divider-ornament {
-  width: 20px;
-  height: 20px;
-  color: var(--copper);
-  opacity: 0.45;
-  flex-shrink: 0;
+  line-height: 1.2;
+  margin: 0 0 var(--space-2);
 }
 
 .welcome__lead {
   font-family: 'Lora', serif;
-  font-size: 15px;
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.4;
   color: var(--ink);
   margin: 0;
   text-align: center;
@@ -331,22 +322,23 @@ body {
 
 .welcome__pillars {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
   width: 100%;
   list-style: none;
   margin: 0;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .welcome__pillar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-4) var(--space-3);
+  gap: 2px;
+  padding: var(--space-2) var(--space-1);
   background: var(--ivory);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   box-shadow: var(--shadow-1);
 }
 
@@ -354,98 +346,133 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   color: var(--rose);
-  margin-bottom: var(--space-1);
 }
 
 .welcome__pillar-icon .icon {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
 }
 
 .welcome__pillar-name {
   font-family: 'Lora', serif;
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
   color: var(--ink);
-  line-height: 1.2;
-}
-
-.welcome__pillar-hint {
-  font-family: 'Lora', serif;
-  font-size: 12px;
-  font-style: italic;
-  color: var(--ink-soft);
-  line-height: 1.3;
+  line-height: 1.15;
 }
 
 .welcome__actions {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
+  flex-direction: row;
+  align-items: stretch;
+  gap: var(--space-2);
   width: 100%;
+  flex-shrink: 0;
 }
 
 .welcome__cta,
 .welcome__cta-secondary {
-  width: 100%;
-  max-width: 280px;
-}
-
-.welcome__hint {
-  font-family: 'Lora', serif;
-  font-size: 13px;
-  font-style: italic;
-  line-height: 1.45;
-  color: var(--ink-soft);
-  margin: 0;
-  max-width: 300px;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 14px;
 }
 
 .welcome__join-block {
   width: 100%;
-  padding-top: var(--space-5);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--line-copper);
+  flex-shrink: 0;
 }
 
 .welcome__join-kicker {
   font-family: 'Lora', serif;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--copper);
-  margin: 0 0 var(--space-4);
+  margin: 0 0 var(--space-2);
 }
 
 .welcome__join {
   width: 100%;
+}
+
+.welcome__join-row {
   display: flex;
-  flex-direction: column;
   align-items: stretch;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
-.welcome__join-label {
-  font-family: 'Lora', serif;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--ink-soft);
-  margin: 0;
-  text-align: left;
-}
-
-.welcome__join-input {
+.welcome__join-input.form-input--mono {
+  flex: 1;
+  min-width: 0;
+  padding: 8px var(--space-3);
+  font-size: 13px;
+  letter-spacing: 0.08em;
   text-align: center;
-  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 .welcome__join-btn {
-  width: 100%;
+  flex-shrink: 0;
+  padding: 8px 14px;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Écrans très bas (ex. iPhone SE) : resserrer encore */
+@media (max-height: 700px) {
+  .app--guest .views {
+    padding-top: var(--space-1);
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .welcome {
+    gap: var(--space-2);
+  }
+
+  .welcome__title {
+    font-size: 26px;
+  }
+
+  .welcome__tagline {
+    font-size: 14px;
+    margin-bottom: var(--space-1);
+  }
+
+  .welcome__lead {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .welcome__pillar {
+    padding: 6px 2px;
+  }
+
+  .welcome__pillar-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .welcome__pillar-icon .icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  .welcome__cta,
+  .welcome__cta-secondary {
+    padding: 9px 10px;
+    font-size: 13px;
+  }
+
+  .welcome__join-block {
+    padding-top: var(--space-1);
+  }
 }
 
 /* ─── 8. État vide (centré dans la vue) ────────────────────────── */
