@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulle — notre monde à deux</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #FDF6EE;
+      --cream-dark: #F5EBE0;
+      --terracotta: #C97B5C;
+      --terracotta-light: #E8A87C;
+      --terracotta-pale: #F5DACB;
+      --sage: #8BAF8A;
+      --sage-light: #C2D8C1;
+      --sage-pale: #E4F0E3;
+      --rose: #E8BFB0;
+      --rose-pale: #FAF0EB;
+      --brown: #3E2C22;
+      --brown-mid: #6B5346;
+      --brown-light: #9E8577;
+      --white: #FFFFFF;
+      --shadow: 0 4px 24px rgba(62, 44, 34, 0.08);
+      --shadow-sm: 0 2px 12px rgba(62, 44, 34, 0.06);
+      --radius: 20px;
+      --radius-sm: 12px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--cream);
+      color: var(--brown);
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ─── HEADER ─────────────────────────────────── */
+    header {
+      background: var(--white);
+      box-shadow: var(--shadow-sm);
+      padding: 0 32px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--terracotta-pale), var(--rose));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--brown);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-tagline {
+      font-size: 12px;
+      color: var(--brown-light);
+      font-weight: 300;
+      margin-top: -2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      padding: 6px 14px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--brown-mid);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-ghost:hover { background: var(--cream); border-color: var(--rose); color: var(--terracotta); }
+
+    /* ─── TABS ───────────────────────────────────── */
+    .tabs-bar {
+      background: var(--white);
+      border-bottom: 1.5px solid var(--cream-dark);
+      display: flex;
+      gap: 0;
+      padding: 0 32px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 14px 20px 11px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--brown-light);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--terracotta); }
+    .tab-btn.active {
+      color: var(--terracotta);
+      border-bottom-color: var(--terracotta);
+    }
+    .tab-emoji { font-size: 16px; }
+    .tab-count {
+      background: var(--terracotta-pale);
+      color: var(--terracotta);
+      border-radius: 20px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .tab-btn:not(.active) .tab-count { background: var(--cream-dark); color: var(--brown-light); }
+
+    /* ─── MAIN ───────────────────────────────────── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 24px 80px;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      color: var(--brown);
+    }
+    .section-subtitle {
+      font-size: 13px;
+      color: var(--brown-light);
+      margin-top: 2px;
+      font-weight: 300;
+    }
+
+    .btn-add {
+      background: var(--terracotta);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 10px 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(201, 123, 92, 0.3);
+    }
+    .btn-add:hover { background: var(--terracotta-light); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(201, 123, 92, 0.35); }
+
+    /* ─── FILTER CHIPS ───────────────────────────── */
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: var(--white);
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--brown-mid);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .chip:hover { border-color: var(--terracotta-pale); color: var(--terracotta); }
+    .chip.active { background: var(--terracotta-pale); border-color: var(--terracotta-pale); color: var(--terracotta); font-weight: 500; }
+
+    /* ─── CARDS GRID ─────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .cards-grid.list-grid {
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    /* ─── CARD CULTURE ───────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(62, 44, 34, 0.12); }
+
+    .card-poster {
+      width: 100%;
+      aspect-ratio: 2/3;
+      object-fit: cover;
+      background: var(--cream-dark);
+      display: block;
+    }
+
+    .card-poster-placeholder {
+      width: 100%;
+      aspect-ratio: 2/3;
+      background: linear-gradient(135deg, var(--cream-dark), var(--rose-pale));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+    }
+
+    .card-body {
+      padding: 14px;
+    }
+
+    .card-type-badge {
+      display: inline-block;
+      background: var(--sage-pale);
+      color: var(--sage);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .card-type-badge.film { background: var(--terracotta-pale); color: var(--terracotta); }
+    .card-type-badge.serie { background: var(--sage-pale); color: var(--sage); }
+
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 16px;
+      color: var(--brown);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .card-meta {
+      font-size: 12px;
+      color: var(--brown-light);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .btn-seen {
+      flex: 1;
+      background: var(--sage-pale);
+      border: none;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--sage);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-seen:hover { background: var(--sage-light); }
+    .btn-seen.done { background: var(--sage); color: white; }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 9px;
+      font-size: 14px;
+      cursor: pointer;
+      color: var(--brown-light);
+      transition: all 0.2s;
+    }
+    .btn-delete:hover { background: #FEE2E2; color: #DC2626; }
+
+    /* ─── CARD LIST (endroits, activités, cuisine) ─ */
+    .card-list {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: all 0.25s;
+    }
+    .card-list:hover { transform: translateY(-2px); box-shadow: 0 6px 28px rgba(62, 44, 34, 0.1); }
+
+    .card-list-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .icon-bg-terracotta { background: var(--terracotta-pale); }
+    .icon-bg-sage { background: var(--sage-pale); }
+    .icon-bg-rose { background: var(--rose-pale); }
+
+    .card-list-content { flex: 1; min-width: 0; }
+
+    .card-list-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+      color: var(--brown);
+      margin-bottom: 3px;
+    }
+
+    .card-list-sub {
+      font-size: 12px;
+      color: var(--brown-light);
+      font-weight: 300;
+      margin-bottom: 6px;
+    }
+
+    .card-list-desc {
+      font-size: 13px;
+      color: var(--brown-mid);
+      line-height: 1.5;
+    }
+
+    .card-list-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .btn-done {
+      background: var(--cream-dark);
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--brown-mid);
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-done:hover { background: var(--sage-pale); color: var(--sage); }
+    .btn-done.done { background: var(--sage); color: white; }
+
+    /* ─── EMPTY STATE ────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 64px 24px;
+      color: var(--brown-light);
+    }
+    .empty-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-title { font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--brown-mid); margin-bottom: 8px; }
+    .empty-text { font-size: 14px; font-weight: 300; }
+
+    /* ─── MODAL ──────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(62, 44, 34, 0.35);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--white);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(62, 44, 34, 0.18);
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.25s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-header {
+      padding: 28px 28px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--brown);
+    }
+
+    .modal-close {
+      background: var(--cream);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      cursor: pointer;
+      color: var(--brown-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover { background: var(--cream-dark); color: var(--brown); }
+
+    .modal-body { padding: 24px 28px 28px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brown-mid);
+      margin-bottom: 6px;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: var(--cream);
+      border: 1.5px solid var(--cream-dark);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--brown);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--terracotta-light);
+      background: var(--white);
+    }
+    .form-textarea { resize: vertical; min-height: 80px; }
+
+    .form-hint { font-size: 12px; color: var(--brown-light); margin-top: 4px; font-weight: 300; }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--terracotta);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 16px rgba(201, 123, 92, 0.3);
+    }
+    .btn-submit:hover { background: var(--terracotta-light); }
+
+    /* ─── TOAST ──────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--brown);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 300;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── SCROLLBAR ──────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--cream-dark); border-radius: 3px; }
+
+    /* ─── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 600px) {
+      header { padding: 0 16px; height: 60px; }
+      .tabs-bar { padding: 0 8px; gap: 0; overflow-x: auto; }
+      .tab-btn { padding: 12px 12px 9px; font-size: 13px; }
+      main { padding: 24px 16px 60px; }
+      .section-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🫧</div>
+      <div>
+        <div class="logo-text">Bulle</div>
+        <div class="logo-tagline">notre monde à deux</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ghost" onclick="exportData()">⬇ Exporter</button>
+      <button class="btn-ghost" onclick="document.getElementById('importInput').click()">⬆ Importer</button>
+      <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)" />
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs-bar">
+    <button class="tab-btn active" onclick="switchTab('culture', this)">
+      <span class="tab-emoji">🎬</span> Culture
+      <span class="tab-count" id="count-culture">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('endroits', this)">
+      <span class="tab-emoji">📍</span> Endroits
+      <span class="tab-count" id="count-endroits">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('activites', this)">
+      <span class="tab-emoji">✨</span> Activités
+      <span class="tab-count" id="count-activites">0</span>
+    </button>
+    <button class="tab-btn" onclick="switchTab('cuisine', this)">
+      <span class="tab-emoji">🍳</span> Cuisine
+      <span class="tab-count" id="count-cuisine">0</span>
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- ── CULTURE ── -->
+    <section class="section active" id="section-culture">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Films & Séries</div>
+          <div class="section-subtitle">Vos prochaines soirées ciné à deux</div>
+        </div>
+        <button class="btn-add" onclick="openModal('culture')">+ Ajouter</button>
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" onclick="filterCulture('tous', this)">Tous</button>
+        <button class="chip" onclick="filterCulture('film', this)">Films</button>
+        <button class="chip" onclick="filterCulture('serie', this)">Séries</button>
+        <button class="chip" onclick="filterCulture('a-voir', this)">À voir</button>
+        <button class="chip" onclick="filterCulture('vu', this)">Déjà vus</button>
+      </div>
+      <div class="cards-grid" id="cards-culture"></div>
+    </section>
+
+    <!-- ── ENDROITS ── -->
+    <section class="section" id="section-endroits">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Endroits à découvrir</div>
+          <div class="section-subtitle">Restos, balades, voyages et escapades</div>
+        </div>
+        <button class="btn-add" onclick="openModal('endroits')">+ Ajouter</button>
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" onclick="filterList('endroits', 'tous', this)">Tous</button>
+        <button class="chip" onclick="filterList('endroits', 'notre-ville', this)">Notre ville</button>
+        <button class="chip" onclick="filterList('endroits', 'autre-ville', this)">Autre ville</button>
+        <button class="chip" onclick="filterList('endroits', 'voyage', this)">Voyage</button>
+      </div>
+      <div class="cards-grid list-grid" id="cards-endroits"></div>
+    </section>
+
+    <!-- ── ACTIVITÉS ── -->
+    <section class="section" id="section-activites">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Activités</div>
+          <div class="section-subtitle">Tout ce qu'on veut faire ensemble</div>
+        </div>
+        <button class="btn-add" onclick="openModal('activites')">+ Ajouter</button>
+      </div>
+      <div class="cards-grid list-grid" id="cards-activites"></div>
+    </section>
+
+    <!-- ── CUISINE ── -->
+    <section class="section" id="section-cuisine">
+      <div class="section-header">
+        <div>
+          <div class="section-title">À cuisiner</div>
+          <div class="section-subtitle">Vos recettes et idées repas</div>
+        </div>
+        <button class="btn-add" onclick="openModal('cuisine')">+ Ajouter</button>
+      </div>
+      <div class="cards-grid list-grid" id="cards-cuisine"></div>
+    </section>
+
+  </main>
+
+  <!-- MODALS -->
+
+  <!-- Culture Modal -->
+  <div class="modal-overlay" id="modal-culture">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Ajouter un film ou une série</div>
+        <button class="modal-close" onclick="closeModal('culture')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <div style="display:flex;gap:10px">
+            <label style="flex:1;cursor:pointer">
+              <input type="radio" name="culture-type" value="film" checked style="display:none" id="type-film">
+              <div class="chip active" id="chip-film" onclick="selectType('film')" style="text-align:center;padding:8px">🎬 Film</div>
+            </label>
+            <label style="flex:1;cursor:pointer">
+              <input type="radio" name="culture-type" value="serie" style="display:none" id="type-serie">
+              <div class="chip" id="chip-serie" onclick="selectType('serie')" style="text-align:center;padding:8px">📺 Série</div>
+            </label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" class="form-input" id="culture-titre" placeholder="Ex : Perfect Days, La Zona d'intérêt…" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Genre</label>
+            <input type="text" class="form-input" id="culture-genre" placeholder="Drame, Comédie…" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Année</label>
+            <input type="text" class="form-input" id="culture-annee" placeholder="2024" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Acteurs / réalisateur</label>
+          <input type="text" class="form-input" id="culture-acteurs" placeholder="Ex : Wim Wenders, Kōji Yakusho…" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Image (URL)</label>
+          <input type="text" class="form-input" id="culture-image" placeholder="https://… (optionnel)" />
+          <div class="form-hint">Copie l'URL d'une affiche depuis Google Images ou IMDB</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Note / pourquoi le voir ?</label>
+          <textarea class="form-textarea" id="culture-note" placeholder="Recommandé par…, vu dans une liste…"></textarea>
+        </div>
+        <button class="btn-submit" onclick="addCulture()">Ajouter à la liste ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Endroits Modal -->
+  <div class="modal-overlay" id="modal-endroits">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Ajouter un endroit</div>
+        <button class="modal-close" onclick="closeModal('endroits')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input type="text" class="form-input" id="endroits-nom" placeholder="Ex : Café de Flore, Parc des Buttes-Chaumont…" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Catégorie</label>
+            <select class="form-select" id="endroits-categorie">
+              <option value="notre-ville">Notre ville</option>
+              <option value="autre-ville">Autre ville</option>
+              <option value="voyage">Voyage / escapade</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ville / Pays</label>
+            <input type="text" class="form-input" id="endroits-lieu" placeholder="Paris, Lisbonne…" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="endroits-desc" placeholder="Pourquoi y aller ? Ambiance, coup de cœur…"></textarea>
+        </div>
+        <button class="btn-submit" onclick="addEndroit()">Ajouter à la liste ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activités Modal -->
+  <div class="modal-overlay" id="modal-activites">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Ajouter une activité</div>
+        <button class="modal-close" onclick="closeModal('activites')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Activité *</label>
+          <input type="text" class="form-input" id="activites-nom" placeholder="Ex : Cours de poterie, Randonnée en forêt…" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="activites-desc" placeholder="Détails, où, quand…"></textarea>
+        </div>
+        <button class="btn-submit" onclick="addActivite()">Ajouter à la liste ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cuisine Modal -->
+  <div class="modal-overlay" id="modal-cuisine">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Ajouter une recette</div>
+        <button class="modal-close" onclick="closeModal('cuisine')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Recette / plat *</label>
+          <input type="text" class="form-input" id="cuisine-nom" placeholder="Ex : Risotto aux champignons, Tarte tatin…" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description / notes</label>
+          <textarea class="form-textarea" id="cuisine-desc" placeholder="Ingrédients clés, lien recette, occasion…"></textarea>
+        </div>
+        <button class="btn-submit" onclick="addCuisine()">Ajouter à la liste ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ─── STATE ─────────────────────────────────────────
+    let state = {
+      culture: [],
+      endroits: [],
+      activites: [],
+      cuisine: []
+    };
+
+    let currentCultureFilter = 'tous';
+    let currentEndroitsFilter = 'tous';
+    let selectedType = 'film';
+
+    // ─── PERSISTENCE ───────────────────────────────────
+    function save() {
+      localStorage.setItem('bulle-data', JSON.stringify(state));
+    }
+
+    function load() {
+      const raw = localStorage.getItem('bulle-data');
+      if (raw) {
+        try { state = JSON.parse(raw); } catch(e) {}
+      }
+    }
+
+    // ─── EXPORT / IMPORT ──────────────────────────────
+    function exportData() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bulle-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Données exportées ! 📦');
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          state = JSON.parse(e.target.result);
+          save();
+          renderAll();
+          showToast('Données importées ! 🎉');
+        } catch(err) {
+          showToast('Fichier invalide 😕');
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    // ─── TABS ──────────────────────────────────────────
+    function switchTab(section, btn) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('section-' + section).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    // ─── MODAL ─────────────────────────────────────────
+    function openModal(section) {
+      document.getElementById('modal-' + section).classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(section) {
+      document.getElementById('modal-' + section).classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    });
+
+    // ─── TYPE SELECTOR (culture) ──────────────────────
+    function selectType(type) {
+      selectedType = type;
+      document.getElementById('chip-film').classList.toggle('active', type === 'film');
+      document.getElementById('chip-serie').classList.toggle('active', type === 'serie');
+    }
+
+    // ─── TOAST ─────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    // ─── COUNTS ────────────────────────────────────────
+    function updateCounts() {
+      document.getElementById('count-culture').textContent = state.culture.length;
+      document.getElementById('count-endroits').textContent = state.endroits.length;
+      document.getElementById('count-activites').textContent = state.activites.length;
+      document.getElementById('count-cuisine').textContent = state.cuisine.length;
+    }
+
+    // ─── CULTURE ──────────────────────────────────────
+    function addCulture() {
+      const titre = document.getElementById('culture-titre').value.trim();
+      if (!titre) { showToast('Ajoute un titre ! 😉'); return; }
+
+      const item = {
+        id: Date.now(),
+        type: selectedType,
+        titre,
+        genre: document.getElementById('culture-genre').value.trim(),
+        annee: document.getElementById('culture-annee').value.trim(),
+        acteurs: document.getElementById('culture-acteurs').value.trim(),
+        image: document.getElementById('culture-image').value.trim(),
+        note: document.getElementById('culture-note').value.trim(),
+        vu: false,
+        date: new Date().toISOString()
+      };
+
+      state.culture.unshift(item);
+      save();
+      renderCulture();
+      updateCounts();
+      closeModal('culture');
+
+      // Reset form
+      ['culture-titre','culture-genre','culture-annee','culture-acteurs','culture-image','culture-note']
+        .forEach(id => document.getElementById(id).value = '');
+      selectType('film');
+      showToast('Ajouté à votre liste ! 🎬');
+    }
+
+    function filterCulture(filter, btn) {
+      currentCultureFilter = filter;
+      document.querySelectorAll('.filter-chips .chip').forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      renderCulture();
+    }
+
+    function toggleVu(id) {
+      const item = state.culture.find(i => i.id === id);
+      if (item) { item.vu = !item.vu; save(); renderCulture(); }
+    }
+
+    function deleteItem(section, id) {
+      state[section] = state[section].filter(i => i.id !== id);
+      save();
+      renderAll();
+      showToast('Supprimé 🗑');
+    }
+
+    function renderCulture() {
+      const container = document.getElementById('cards-culture');
+      let items = state.culture;
+
+      if (currentCultureFilter === 'film') items = items.filter(i => i.type === 'film');
+      else if (currentCultureFilter === 'serie') items = items.filter(i => i.type === 'serie');
+      else if (currentCultureFilter === 'a-voir') items = items.filter(i => !i.vu);
+      else if (currentCultureFilter === 'vu') items = items.filter(i => i.vu);
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">🍿</div>
+            <div class="empty-title">Aucun film ou série ici</div>
+            <div class="empty-text">Ajoutez vos prochaines soirées ciné !</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card ${item.vu ? 'opacity-70' : ''}" style="${item.vu ? 'opacity:0.7' : ''}">
+          ${item.image
+            ? `<img class="card-poster" src="${escHtml(item.image)}" alt="${escHtml(item.titre)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" /><div class="card-poster-placeholder" style="display:none">${item.type === 'film' ? '🎬' : '📺'}</div>`
+            : `<div class="card-poster-placeholder">${item.type === 'film' ? '🎬' : '📺'}</div>`
+          }
+          <div class="card-body">
+            <div class="card-type-badge ${item.type}">${item.type === 'film' ? 'Film' : 'Série'}</div>
+            <div class="card-title">${escHtml(item.titre)}${item.annee ? ` <span style="font-weight:300;font-size:14px;color:var(--brown-light)">(${escHtml(item.annee)})</span>` : ''}</div>
+            <div class="card-meta">
+              ${item.genre ? `<span>${escHtml(item.genre)}</span>` : ''}
+              ${item.acteurs ? `<br>${escHtml(item.acteurs)}` : ''}
+              ${item.note ? `<br><em style="color:var(--brown-light)">"${escHtml(item.note)}"</em>` : ''}
+            </div>
+            <div class="card-actions">
+              <button class="btn-seen ${item.vu ? 'done' : ''}" onclick="toggleVu(${item.id})">
+                ${item.vu ? '✓ Vu !' : '✓ Marquer vu'}
+              </button>
+              <button class="btn-delete" onclick="deleteItem('culture', ${item.id})" title="Supprimer">🗑</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── ENDROITS ─────────────────────────────────────
+    function addEndroit() {
+      const nom = document.getElementById('endroits-nom').value.trim();
+      if (!nom) { showToast('Ajoute un nom ! 😉'); return; }
+
+      const catIcons = { 'notre-ville': '📍', 'autre-ville': '🏙️', 'voyage': '✈️' };
+      const catLabels = { 'notre-ville': 'Notre ville', 'autre-ville': 'Autre ville', 'voyage': 'Voyage' };
+      const cat = document.getElementById('endroits-categorie').value;
+
+      state.endroits.unshift({
+        id: Date.now(),
+        nom,
+        categorie: cat,
+        categorieLabel: catLabels[cat],
+        categorieIcon: catIcons[cat],
+        lieu: document.getElementById('endroits-lieu').value.trim(),
+        desc: document.getElementById('endroits-desc').value.trim(),
+        fait: false,
+        date: new Date().toISOString()
+      });
+
+      save(); renderEndroits(); updateCounts(); closeModal('endroits');
+      ['endroits-nom','endroits-lieu','endroits-desc'].forEach(id => document.getElementById(id).value = '');
+      showToast('Endroit ajouté ! 📍');
+    }
+
+    function filterList(section, filter, btn) {
+      if (section === 'endroits') currentEndroitsFilter = filter;
+      const chips = btn.closest('.filter-chips').querySelectorAll('.chip');
+      chips.forEach(c => c.classList.remove('active'));
+      btn.classList.add('active');
+      if (section === 'endroits') renderEndroits();
+    }
+
+    function toggleFait(section, id) {
+      const item = state[section].find(i => i.id === id);
+      if (item) { item.fait = !item.fait; save(); renderSection(section); }
+    }
+
+    function renderEndroits() {
+      const container = document.getElementById('cards-endroits');
+      let items = state.endroits;
+      if (currentEndroitsFilter !== 'tous') items = items.filter(i => i.categorie === currentEndroitsFilter);
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🗺️</div>
+            <div class="empty-title">Aucun endroit ici</div>
+            <div class="empty-text">Ajoutez vos adresses coups de cœur !</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card-list">
+          <div class="card-list-icon icon-bg-terracotta">${item.categorieIcon || '📍'}</div>
+          <div class="card-list-content">
+            <div class="card-list-title">${escHtml(item.nom)}</div>
+            <div class="card-list-sub">${escHtml(item.categorieLabel || '')}${item.lieu ? ' · ' + escHtml(item.lieu) : ''}</div>
+            ${item.desc ? `<div class="card-list-desc">${escHtml(item.desc)}</div>` : ''}
+          </div>
+          <div class="card-list-actions">
+            <button class="btn-done ${item.fait ? 'done' : ''}" onclick="toggleFait('endroits', ${item.id})">
+              ${item.fait ? '✓ Fait !' : 'À faire'}
+            </button>
+            <button class="btn-delete" onclick="deleteItem('endroits', ${item.id})" title="Supprimer" style="background:transparent;border:none;cursor:pointer;color:var(--brown-light);font-size:14px;padding:4px 6px;border-radius:6px" onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626'" onmouseout="this.style.background='transparent';this.style.color='var(--brown-light)'">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── ACTIVITÉS ────────────────────────────────────
+    function addActivite() {
+      const nom = document.getElementById('activites-nom').value.trim();
+      if (!nom) { showToast('Ajoute une activité ! 😉'); return; }
+
+      state.activites.unshift({
+        id: Date.now(),
+        nom,
+        desc: document.getElementById('activites-desc').value.trim(),
+        fait: false,
+        date: new Date().toISOString()
+      });
+
+      save(); renderActivites(); updateCounts(); closeModal('activites');
+      ['activites-nom','activites-desc'].forEach(id => document.getElementById(id).value = '');
+      showToast('Activité ajoutée ! ✨');
+    }
+
+    function renderActivites() {
+      const container = document.getElementById('cards-activites');
+      const items = state.activites;
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🌿</div>
+            <div class="empty-title">Aucune activité ici</div>
+            <div class="empty-text">Ajoutez vos idées de sorties et aventures !</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card-list" style="${item.fait ? 'opacity:0.65' : ''}">
+          <div class="card-list-icon icon-bg-sage">✨</div>
+          <div class="card-list-content">
+            <div class="card-list-title">${escHtml(item.nom)}</div>
+            ${item.desc ? `<div class="card-list-desc">${escHtml(item.desc)}</div>` : ''}
+          </div>
+          <div class="card-list-actions">
+            <button class="btn-done ${item.fait ? 'done' : ''}" onclick="toggleFait('activites', ${item.id})">
+              ${item.fait ? '✓ Fait !' : 'À faire'}
+            </button>
+            <button onclick="deleteItem('activites', ${item.id})" style="background:transparent;border:none;cursor:pointer;color:var(--brown-light);font-size:14px;padding:4px 6px;border-radius:6px" onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626'" onmouseout="this.style.background='transparent';this.style.color='var(--brown-light)'">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── CUISINE ──────────────────────────────────────
+    function addCuisine() {
+      const nom = document.getElementById('cuisine-nom').value.trim();
+      if (!nom) { showToast('Ajoute une recette ! 😉'); return; }
+
+      state.cuisine.unshift({
+        id: Date.now(),
+        nom,
+        desc: document.getElementById('cuisine-desc').value.trim(),
+        fait: false,
+        date: new Date().toISOString()
+      });
+
+      save(); renderCuisine(); updateCounts(); closeModal('cuisine');
+      ['cuisine-nom','cuisine-desc'].forEach(id => document.getElementById(id).value = '');
+      showToast('Recette ajoutée ! 🍳');
+    }
+
+    function renderCuisine() {
+      const container = document.getElementById('cards-cuisine');
+      const items = state.cuisine;
+
+      if (items.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🫕</div>
+            <div class="empty-title">Aucune recette ici</div>
+            <div class="empty-text">Ajoutez vos envies culinaires !</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = items.map(item => `
+        <div class="card-list" style="${item.fait ? 'opacity:0.65' : ''}">
+          <div class="card-list-icon icon-bg-rose">🍳</div>
+          <div class="card-list-content">
+            <div class="card-list-title">${escHtml(item.nom)}</div>
+            ${item.desc ? `<div class="card-list-desc">${escHtml(item.desc)}</div>` : ''}
+          </div>
+          <div class="card-list-actions">
+            <button class="btn-done ${item.fait ? 'done' : ''}" onclick="toggleFait('cuisine', ${item.id})">
+              ${item.fait ? '✓ Cuisiné !' : 'À cuisiner'}
+            </button>
+            <button onclick="deleteItem('cuisine', ${item.id})" style="background:transparent;border:none;cursor:pointer;color:var(--brown-light);font-size:14px;padding:4px 6px;border-radius:6px" onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626'" onmouseout="this.style.background='transparent';this.style.color='var(--brown-light)'">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ─── HELPERS ──────────────────────────────────────
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderSection(section) {
+      if (section === 'culture') renderCulture();
+      else if (section === 'endroits') renderEndroits();
+      else if (section === 'activites') renderActivites();
+      else if (section === 'cuisine') renderCuisine();
+    }
+
+    function renderAll() {
+      renderCulture();
+      renderEndroits();
+      renderActivites();
+      renderCuisine();
+      updateCounts();
+    }
+
+    // ─── INIT ─────────────────────────────────────────
+    load();
+    renderAll();
+  </script>
+</body>
+</html>

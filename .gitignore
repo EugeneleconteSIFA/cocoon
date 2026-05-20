@@ -1,20 +1,40 @@
-# Python
+# ─── Secrets ─────────────────────────────────
+backend/.env
+.env
+*.env.local
+
+# ─── Données runtime ─────────────────────────
+data/
+backups/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# ─── Python ──────────────────────────────────
 .venv/
+venv/
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
 *.egg-info/
 .pytest_cache/
+dist/
+build/
 
-# Secrets & données locales
-backend/.env
-data/*.db
-data/*.db-journal
-
-# OS / IDE
+# ─── Éditeurs / OS ───────────────────────────
 .DS_Store
-.idea/
+Thumbs.db
 .vscode/
+.idea/
 *.swp
+*.swo
 
-# Archives (pistes abandonnées)
+# ─── Logs ────────────────────────────────────
+*.log
+logs/
+
+# ─── Archives (pistes abandonnées) ───────────
 bulle.html
