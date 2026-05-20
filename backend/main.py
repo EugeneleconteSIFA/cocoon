@@ -22,7 +22,16 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from .database import init_db
-from .routers import activites, cuisine, culture, lieux, search, auth as auth_router, cocons as cocons_router
+from .routers import (
+    activites,
+    admin,
+    cuisine,
+    culture,
+    lieux,
+    search,
+    auth as auth_router,
+    cocons as cocons_router,
+)
 
 
 @asynccontextmanager
@@ -83,6 +92,7 @@ app.include_router(lieux.router)
 app.include_router(activites.router)
 app.include_router(cuisine.router)
 app.include_router(search.router)
+app.include_router(admin.router)
 
 
 @app.get("/api/health", tags=["meta"])

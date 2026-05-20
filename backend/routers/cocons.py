@@ -120,3 +120,49 @@ def list_cocons(
         if cocon:
             result.append(_cocon_read(cocon, role=m.role, db=db))
     return result
+
+
+def _delete_cocon_data(db: Session, cocon_id: int) -> None:
+    """Supprime un Cocon vide et toutes ses entrées de carnet."""
+    for model in (models.Culture, models.Lieu, models.Activite, models.Cuisine):
+        db.query(model).filter(model.cocon_id == cocon_id).delete()
+    db.query(models.CoconMember).filter(models.CoconMember.cocon_id == cocon_id).delete()
+    cocon = db.get(models.Cocon, cocon_id)
+    if cocon:
+        db.delete(cocon)
+
+
+@router.delete("/{cocon_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
+def leave_cocon(
+    cocon_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Quitter un Cocon (retirer mon adhésion)."""
+    membership = (
+        db.query(models.CoconMember)
+        .filter(
+            models.CoconMember.cocon_id == cocon_id,
+            models.CoconMember.user_id == current_user.id,
+        )
+        .first()
+    )
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Vous n'êtes pas membre de ce Cocon")
+
+    was_owner = membership.role == "owner"
+    db.delete(membership)
+    db.flush()
+
+    remaining = (
+        db.query(models.CoconMember)
+        .filter(models.CoconMember.cocon_id == cocon_id)
+        .order_by(models.CoconMember.id)
+        .all()
+    )
+    if not remaining:
+        _delete_cocon_data(db, cocon_id)
+    elif was_owner:
+        remaining[0].role = "owner"
+
+    db.commit()

@@ -40,6 +40,7 @@ class UserRead(_ORMBase):
     birth_date: str | None = None
     display_name: str
     created_at: str
+    role: str = "user"
 
 
 class UserUpdate(_ORMBase):

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -10,6 +12,17 @@ from .. import auth, models, schemas
 from ..database import get_db
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
+
+
+def _user_role(user: models.User) -> str:
+    admin_email = (os.getenv("ADMIN_EMAIL") or "").strip()
+    if admin_email and user.email == admin_email:
+        return "superadmin"
+    return "user"
+
+
+def _user_read(user: models.User) -> schemas.UserRead:
+    return schemas.UserRead.model_validate(user).model_copy(update={"role": _user_role(user)})
 
 
 def _sync_display_name(user: models.User) -> None:
@@ -65,7 +78,7 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     token = auth.create_access_token({"sub": user.id})
     return schemas.TokenResponse(
         access_token=token,
-        user=schemas.UserRead.model_validate(user),
+        user=_user_read(user),
     )
 
 
@@ -85,14 +98,14 @@ def login(
     token = auth.create_access_token({"sub": user.id})
     return schemas.TokenResponse(
         access_token=token,
-        user=schemas.UserRead.model_validate(user),
+        user=_user_read(user),
     )
 
 
 @router.get("/me", response_model=schemas.UserRead)
 def get_me(current_user: models.User = Depends(auth.get_current_user)):
     """Profil de l'utilisateur connecté."""
-    return current_user
+    return _user_read(current_user)
 
 
 @router.patch("/me", response_model=schemas.UserRead)
@@ -105,4 +118,4 @@ def update_me(
     _apply_user_update(current_user, payload)
     db.commit()
     db.refresh(current_user)
-    return current_user
+    return _user_read(current_user)

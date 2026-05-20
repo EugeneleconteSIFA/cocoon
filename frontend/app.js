@@ -6,7 +6,27 @@
   'use strict';
 
   const TABS = ['culture', 'lieux', 'activites', 'cuisine'];
+  const ADMIN_TAB = 'admin';
   const DEFAULT_TAB = 'culture';
+
+  const S = { user: null };
+
+  function navigableTabs() {
+    return S.user?.role === 'superadmin' ? [...TABS, ADMIN_TAB] : TABS;
+  }
+
+  function syncUserState() {
+    S.user = session.getUser();
+    updateAdminNav();
+  }
+
+  function updateAdminNav() {
+    const isAdmin = S.user?.role === 'superadmin';
+    const tab = document.querySelector('[data-admin-tab]');
+    if (tab) tab.hidden = !isAdmin;
+    const pillars = document.querySelector('[data-tabbar-pillars]');
+    if (pillars) pillars.classList.toggle('tabbar__pillars--5', isAdmin);
+  }
   const STORAGE_KEY = 'cocon:lastTab';
   const SEARCH_DEBOUNCE_MS = 300;
 
@@ -62,6 +82,36 @@
     if (Number.isNaN(d.getTime())) return '';
     return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   }
+
+  function formatRelativeTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso.includes('T') ? iso : `${iso}T12:00:00`);
+    if (Number.isNaN(d.getTime())) return '';
+    const diffMs = Date.now() - d.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return "à l'instant";
+    if (mins < 60) return `il y a ${mins} min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `il y a ${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'hier';
+    if (days < 7) return `il y a ${days} j`;
+    return formatDateFr(iso);
+  }
+
+  function userInitials(name, email) {
+    const src = (name || email || '?').trim();
+    const parts = src.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+    return src.slice(0, 2).toUpperCase();
+  }
+
+  const PILIER_LABELS = {
+    culture: 'Culture',
+    lieux: 'Lieux',
+    activites: 'Activités',
+    cuisine: 'Cuisine',
+  };
 
   function todayIso() {
     return new Date().toISOString().slice(0, 10);
@@ -155,14 +205,20 @@
     save(token, user) {
       localStorage.setItem(this.TOKEN_KEY, token);
       localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+      syncUserState();
     },
     setActiveCocon(id, name) {
       localStorage.setItem(this.COCON_KEY, String(id));
       if (name) localStorage.setItem(this.COCON_NAME_KEY, name);
     },
+    clearActiveCocon() {
+      localStorage.removeItem(this.COCON_KEY);
+      localStorage.removeItem(this.COCON_NAME_KEY);
+    },
     getActiveCoconName() { return localStorage.getItem(this.COCON_NAME_KEY); },
     clear() {
       [this.TOKEN_KEY, this.COCON_KEY, this.COCON_NAME_KEY, this.USER_KEY].forEach((k) => localStorage.removeItem(k));
+      syncUserState();
     },
   };
 
@@ -454,6 +510,9 @@
             <button type="button" class="cocon-manage-item__share" data-share-cocon="${c.id}" aria-label="Partager l'invitation à ${escapeHtml(c.name)}">
               <svg class="icon" aria-hidden="true"><use href="#i-share" /></svg>
             </button>
+            <button type="button" class="cocon-manage-item__leave" data-leave-cocon="${c.id}" aria-label="Sortir de ${escapeHtml(c.name)}">
+              <svg class="icon" aria-hidden="true"><use href="#i-trash" /></svg>
+            </button>
           </div>
         </li>`).join('');
     },
@@ -575,6 +634,34 @@
       });
       // Switch cocon depuis la liste dans la modale
       document.querySelector('[data-cocon-manage-list]')?.addEventListener('click', async (e) => {
+        const leaveBtn = e.target.closest('[data-leave-cocon]');
+        if (leaveBtn) {
+          e.stopPropagation();
+          const id = parseInt(leaveBtn.dataset.leaveCocon, 10);
+          const cocon = this._cocons.find((c) => c.id === id);
+          if (!cocon) return;
+          const msg = `Êtes-vous sûr de vouloir sortir de « ${cocon.name} » ?`;
+          if (!confirm(msg)) return;
+          try {
+            await api('DELETE', `/api/cocons/${id}/leave`);
+            const wasActive = session.getCoconId() === id;
+            this._cocons = this._cocons.filter((c) => c.id !== id);
+            if (wasActive) {
+              if (this._cocons.length) {
+                session.setActiveCocon(this._cocons[0].id, this._cocons[0].name);
+              } else {
+                session.clearActiveCocon();
+              }
+            }
+            this._renderCocons();
+            await coconBar.load();
+            if (wasActive) reloadAllPillars();
+            toast(`Tu as quitté « ${cocon.name} ».`);
+          } catch (err) {
+            this._showCoconError(err.message);
+          }
+          return;
+        }
         const shareBtn = e.target.closest('[data-share-cocon]');
         if (shareBtn) {
           e.stopPropagation();
@@ -2068,13 +2155,353 @@
     },
   };
 
+  // ─── Admin (superadmin) ───────────────────────────────────────────
+  const admin = {
+    status: 'idle',
+    overview: null,
+    contributions: null,
+    activity: null,
+    deepDive: null,
+    deepDiveData: null,
+    deepDiveLoading: false,
+    els: {},
+
+    cacheEls() {
+      const root = document.getElementById('admin-section');
+      this.els = { root, mount: root?.querySelector('[data-admin-root]') };
+    },
+
+    onTabShow() {
+      if (S.user?.role !== 'superadmin') return;
+      if (this.status === 'idle' || this.status === 'error') this.load();
+      else this.renderAdmin();
+    },
+
+    async load() {
+      if (!session.isLoggedIn()) return;
+      this.status = 'loading';
+      this.renderAdmin();
+      try {
+        const [overview, contributions, activity] = await Promise.all([
+          api('GET', '/api/admin/stats/overview'),
+          api('GET', '/api/admin/stats/contributions'),
+          api('GET', '/api/admin/stats/activity'),
+        ]);
+        this.overview = overview;
+        this.contributions = contributions;
+        this.activity = activity;
+        this.status = 'ready';
+        this.renderAdmin();
+      } catch (err) {
+        this.status = 'error';
+        this.errorMessage = err.message;
+        this.renderAdmin();
+        toast(err.message);
+      }
+    },
+
+    async toggleDeepDive(pilier) {
+      if (this.deepDive === pilier) {
+        this.deepDive = null;
+        this.deepDiveData = null;
+        this.renderAdmin();
+        return;
+      }
+      this.deepDive = pilier;
+      this.deepDiveData = null;
+      this.deepDiveLoading = true;
+      this.renderAdmin();
+      try {
+        if (pilier === 'culture') {
+          this.deepDiveData = await api('GET', '/api/admin/stats/culture');
+        } else if (pilier === 'lieux') {
+          this.deepDiveData = await api('GET', '/api/admin/stats/lieux');
+        } else {
+          this.deepDiveData = { pilier, fromOverview: true };
+        }
+      } catch (err) {
+        this.deepDive = null;
+        toast(err.message);
+      } finally {
+        this.deepDiveLoading = false;
+        this.renderAdmin();
+      }
+    },
+
+    _skeletonHtml() {
+      return `
+        <div class="admin-skeleton-grid" aria-busy="true" aria-label="Chargement des statistiques">
+          <div class="admin-skeleton admin-skeleton--kpi"></div>
+          <div class="admin-skeleton admin-skeleton--kpi"></div>
+          <div class="admin-skeleton admin-skeleton--kpi"></div>
+          <div class="admin-skeleton admin-skeleton--kpi"></div>
+          <div class="admin-skeleton admin-skeleton--block"></div>
+          <div class="admin-skeleton admin-skeleton--row"></div>
+          <div class="admin-skeleton admin-skeleton--row"></div>
+          <div class="admin-skeleton admin-skeleton--row"></div>
+        </div>`;
+    },
+
+    _errorHtml() {
+      return `
+        <div class="admin-error">
+          <p>${escapeHtml(this.errorMessage || 'Connexion fragile, on réessaie ?')}</p>
+          <button type="button" class="btn btn-ghost" data-admin-retry>Réessayer</button>
+        </div>`;
+    },
+
+    _kpiCardsHtml() {
+      const o = this.overview;
+      if (!o) return '';
+      const pillars = o.pillars || {};
+      const pillarPills = Object.entries(pillars).map(([key, p]) => {
+        const label = PILIER_LABELS[key] || key;
+        return `<span class="admin-kpi__pill">${escapeHtml(label)} · ${p.done}/${p.total}</span>`;
+      }).join('');
+      return `
+        <div class="admin-kpi-grid">
+          ${Object.entries(pillars).map(([key, p]) => `
+            <div class="admin-kpi">
+              <p class="admin-kpi__label">${escapeHtml(PILIER_LABELS[key] || key)}</p>
+              <p class="admin-kpi__value">${p.total}</p>
+              <p class="admin-kpi__sub">${p.done} fait${p.done > 1 ? 's' : ''}</p>
+            </div>`).join('')}
+          <div class="admin-kpi">
+            <p class="admin-kpi__label">Ajouts · 7 j</p>
+            <p class="admin-kpi__value">${o.ajouts_7j ?? 0}</p>
+          </div>
+          <div class="admin-kpi">
+            <p class="admin-kpi__label">Ajouts · 30 j</p>
+            <p class="admin-kpi__value">${o.ajouts_30j ?? 0}</p>
+          </div>
+          <div class="admin-kpi admin-kpi--wide">
+            <p class="admin-kpi__label">Complétion globale</p>
+            <p class="admin-kpi__value">${o.completion_rate ?? 0}%</p>
+            <p class="admin-kpi__sub">${o.done_items ?? 0} sur ${o.total_items ?? 0} au carnet</p>
+            <div class="admin-kpi__pillars">${pillarPills}</div>
+          </div>
+        </div>`;
+    },
+
+    _deepDiveButtonsHtml() {
+      const piliers = ['culture', 'lieux', 'activites', 'cuisine'];
+      return `
+        <div class="admin-deep-dive" role="group" aria-label="Analyses détaillées">
+          ${piliers.map((p) => `
+            <button type="button" class="chip${this.deepDive === p ? ' is-active' : ''}" data-admin-deep="${p}">
+              ${escapeHtml(PILIER_LABELS[p])}
+            </button>`).join('')}
+        </div>`;
+    },
+
+    _barRowsHtml(rows, maxVal, fillClass) {
+      if (!rows.length) return '<p class="admin-kpi__sub">Rien à afficher pour l\'instant.</p>';
+      const max = maxVal || Math.max(...rows.map((r) => r.count), 1);
+      return rows.map((r) => {
+        const pct = Math.round((r.count / max) * 100);
+        const label = r.genre || r.category || r.label || r.key || '—';
+        return `
+          <div class="admin-bar-row">
+            <div class="admin-bar-row__head">
+              <span>${escapeHtml(label)}</span>
+              <span class="admin-bar-row__count">${r.count}</span>
+            </div>
+            <div class="admin-bar-track">
+              <div class="admin-bar-fill ${fillClass}" style="width:${pct}%"></div>
+            </div>
+          </div>`;
+      }).join('');
+    },
+
+    _statusPillsHtml(statuts) {
+      if (!statuts || !Object.keys(statuts).length) return '';
+      return `
+        <div class="admin-pills">
+          ${Object.entries(statuts).map(([k, v]) => `
+            <span class="admin-pill">${escapeHtml(k.replace(/_/g, ' '))} · <strong>${v}</strong></span>
+          `).join('')}
+        </div>`;
+    },
+
+    _deepDivePanelHtml() {
+      if (!this.deepDive) return '';
+      if (this.deepDiveLoading) {
+        return `<div class="admin-panel"><p class="admin-kpi__sub">On charge les détails…</p></div>`;
+      }
+      const d = this.deepDiveData;
+      if (!d) return '';
+
+      if (d.fromOverview && this.overview?.pillars) {
+        const p = this.overview.pillars[this.deepDive];
+        const rows = [{ label: 'Total', count: p?.total || 0 }, { label: 'Faits', count: p?.done || 0 }];
+        return `
+          <div class="admin-panel">
+            <h2 class="admin-panel__title">${escapeHtml(PILIER_LABELS[this.deepDive])}</h2>
+            ${this._barRowsHtml(rows, p?.total || 1, `admin-bar-fill--${this.deepDive}`)}
+            ${this._statusPillsHtml({
+              'au carnet': p?.total || 0,
+              'faits': p?.done || 0,
+            })}
+          </div>`;
+      }
+
+      if (this.deepDive === 'culture') {
+        const genres = (d.par_genre || []).map((g) => ({ genre: g.genre, count: g.count }));
+        const types = Object.entries(d.par_type || {}).map(([k, v]) => ({ label: k === 'tv' ? 'Séries' : 'Films', count: v }));
+        return `
+          <div class="admin-panel">
+            <h2 class="admin-panel__title">Culture</h2>
+            <p class="admin-section-title">Par type</p>
+            ${this._barRowsHtml(types, null, 'admin-bar-fill--culture')}
+            <p class="admin-section-title">Par genre</p>
+            ${this._barRowsHtml(genres, null, 'admin-bar-fill--culture')}
+            <p class="admin-section-title">Par statut</p>
+            ${this._statusPillsHtml(d.par_statut)}
+          </div>`;
+      }
+
+      if (this.deepDive === 'lieux') {
+        const sections = Object.entries(d.par_section || {}).map(([k, v]) => ({
+          label: LIEU_SECTION_LABELS[k] || k,
+          count: v,
+        }));
+        const cats = (d.par_category || []).map((c) => ({ category: c.category, count: c.count }));
+        return `
+          <div class="admin-panel">
+            <h2 class="admin-panel__title">Lieux</h2>
+            <p class="admin-section-title">Par section</p>
+            ${this._barRowsHtml(sections, null, 'admin-bar-fill--lieux')}
+            <p class="admin-section-title">Par catégorie</p>
+            ${this._barRowsHtml(cats, null, 'admin-bar-fill--lieux')}
+            <p class="admin-section-title">Par statut</p>
+            ${this._statusPillsHtml(d.par_statut)}
+          </div>`;
+      }
+
+      return '';
+    },
+
+    _activityFeedHtml() {
+      const items = this.activity?.items || [];
+      if (!items.length) {
+        return '<p class="admin-kpi__sub">Aucune activité récente.</p>';
+      }
+      return `
+        <ul class="admin-feed">
+          ${items.map((item) => {
+            const pilier = item.pilier || 'culture';
+            const action = `Ajouté · ${PILIER_LABELS[pilier] || pilier} · « ${item.titre || ''} »`;
+            return `
+              <li class="admin-feed__item">
+                <span class="admin-feed__dot admin-feed__dot--${escapeHtml(pilier)}" aria-hidden="true"></span>
+                <div class="admin-feed__body">
+                  <p class="admin-feed__user">Cocon</p>
+                  <p class="admin-feed__action">${escapeHtml(action)}</p>
+                </div>
+                <time class="admin-feed__time" datetime="${escapeHtml(item.created_at || '')}">${escapeHtml(formatRelativeTime(item.created_at))}</time>
+              </li>`;
+          }).join('')}
+        </ul>`;
+    },
+
+    _contributionsHtml() {
+      const rows = this.contributions?.contributions || [];
+      if (!rows.length) {
+        return '<p class="admin-kpi__sub">Aucune contribution enregistrée.</p>';
+      }
+      const maxTotal = Math.max(...rows.map((r) => r.total || 0), 1);
+      return `
+        <ul class="admin-contrib-list">
+          ${rows.map((row) => {
+            const name = row.display_name || row.cocon_name || '—';
+            const email = row.email || '';
+            const bars = [
+              { key: 'culture', count: row.culture || 0, cls: 'admin-bar-fill--culture' },
+              { key: 'lieux', count: row.lieux || 0, cls: 'admin-bar-fill--lieux' },
+              { key: 'activites', count: row.activites || 0, cls: 'admin-bar-fill--activites' },
+              { key: 'cuisine', count: row.cuisine || 0, cls: 'admin-bar-fill--cuisine' },
+            ];
+            const maxUser = Math.max(...bars.map((b) => b.count), 1);
+            return `
+              <li class="admin-contrib">
+                <div class="admin-contrib__head">
+                  <span class="admin-contrib__avatar" aria-hidden="true">${escapeHtml(userInitials(name, email))}</span>
+                  <div>
+                    <p class="admin-contrib__name">${escapeHtml(name)}</p>
+                    ${email ? `<p class="admin-contrib__meta">${escapeHtml(email)}</p>` : ''}
+                    ${row.last_activity ? `<p class="admin-contrib__meta">Dernière activité · ${escapeHtml(formatRelativeTime(row.last_activity))}</p>` : ''}
+                  </div>
+                  <span class="admin-contrib__total">${row.total ?? 0}</span>
+                </div>
+                <div class="admin-contrib__bars">
+                  ${bars.map((b) => `
+                    <div>
+                      <div class="admin-contrib-bar__label">
+                        <span>${escapeHtml(PILIER_LABELS[b.key])}</span>
+                        <span>${b.count}</span>
+                      </div>
+                      <div class="admin-contrib-bar__track">
+                        <div class="admin-contrib-bar__fill ${b.cls}" style="width:${Math.round((b.count / maxUser) * 100)}%"></div>
+                      </div>
+                    </div>`).join('')}
+                </div>
+              </li>`;
+          }).join('')}
+        </ul>`;
+    },
+
+    renderAdmin() {
+      const mount = this.els.mount;
+      if (!mount) return;
+
+      if (this.status === 'loading') {
+        mount.innerHTML = this._skeletonHtml();
+        return;
+      }
+      if (this.status === 'error') {
+        mount.innerHTML = this._errorHtml();
+        mount.querySelector('[data-admin-retry]')?.addEventListener('click', () => this.load());
+        return;
+      }
+      if (this.status !== 'ready') {
+        mount.innerHTML = '';
+        return;
+      }
+
+      mount.innerHTML = `
+        <div class="admin-section-block">
+          <h2 class="admin-section-title">Indicateurs</h2>
+          ${this._kpiCardsHtml()}
+          ${this._deepDiveButtonsHtml()}
+          ${this._deepDivePanelHtml()}
+        </div>
+        <div class="admin-section-block">
+          <h2 class="admin-section-title">Activité récente</h2>
+          ${this._activityFeedHtml()}
+        </div>
+        <div class="admin-section-block">
+          <h2 class="admin-section-title">Contributions</h2>
+          ${this._contributionsHtml()}
+        </div>`;
+
+      mount.querySelectorAll('[data-admin-deep]').forEach((btn) => {
+        btn.addEventListener('click', () => this.toggleDeepDive(btn.dataset.adminDeep));
+      });
+    },
+
+    bind() {
+      this.cacheEls();
+    },
+  };
+
   // ─── Routeur ───────────────────────────────────────────────────────
   function readInitialTab() {
+    const tabs = navigableTabs();
     const fromHash = (location.hash || '').replace(/^#/, '');
-    if (TABS.includes(fromHash)) return fromHash;
+    if (tabs.includes(fromHash)) return fromHash;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (TABS.includes(stored)) return stored;
+      if (tabs.includes(stored)) return stored;
     } catch (_e) { /* ignore */ }
     return DEFAULT_TAB;
   }
@@ -2082,8 +2509,9 @@
   let activeTab = DEFAULT_TAB;
 
   function currentTab() {
+    const tabs = navigableTabs();
     const fromHash = (location.hash || '').replace(/^#/, '');
-    return TABS.includes(fromHash) ? fromHash : activeTab;
+    return tabs.includes(fromHash) ? fromHash : activeTab;
   }
 
   function closeAllPanels() {
@@ -2123,7 +2551,9 @@
   }
 
   function showTab(name) {
-    if (!TABS.includes(name)) name = DEFAULT_TAB;
+    const tabs = navigableTabs();
+    if (!tabs.includes(name)) name = DEFAULT_TAB;
+    if (name === ADMIN_TAB && S.user?.role !== 'superadmin') name = DEFAULT_TAB;
     activeTab = name;
     document.querySelectorAll('.view').forEach((view) => {
       view.hidden = view.dataset.view !== name;
@@ -2141,6 +2571,7 @@
     if (name === 'lieux') lieux.onTabShow();
     if (name === 'activites') activites.onTabShow();
     if (name === 'cuisine') cuisine.onTabShow();
+    if (name === ADMIN_TAB) admin.onTabShow();
   }
 
   function init() {
@@ -2150,6 +2581,7 @@
     lieux.cacheEls();
     activites.cacheEls();
     cuisine.cacheEls();
+    admin.bind();
     culture.bindEvents();
     lieux.bindEvents();
     activites.bindEvents();
@@ -2163,7 +2595,7 @@
       const link = e.target.closest('a[href^="#"]');
       if (!link) return;
       const target = link.getAttribute('href').slice(1);
-      if (!TABS.includes(target)) return;
+      if (!navigableTabs().includes(target)) return;
       e.preventDefault();
       showTab(target);
     });
@@ -2195,6 +2627,8 @@
       }, 0);
     });
 
+    syncUserState();
+
     if (session.getToken()) {
       updateAuthUI(true);
       validateSession().then((ok) => {
@@ -2203,6 +2637,7 @@
           updateAuthUI(false);
           return;
         }
+        syncUserState();
         coconBar.load().then(() => {
           if (session.getCoconId()) reloadAllPillars();
           else handleJoinFromUrl();
