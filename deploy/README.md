@@ -11,6 +11,20 @@ Guide pour l’**étape 6** du [ROADMAP](../ROADMAP.md). Stack : Ubuntu, Nginx, 
 - Clés API dans `backend/.env` (TMDb + Google Places)
 - **Google Maps** : restreindre la clé par **IP du VPS** dans Google Cloud Console
 
+### Lieux : erreur 403 / 502 sur `/api/search/place`
+
+Le backend appelle **Places API (New)** (`places.googleapis.com/v1`), pas l’ancienne « Places API ».
+
+Dans [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services :
+
+1. **Activer** : *Places API (New)* (et la facturation du projet).
+2. **Credentials** → ta clé `GOOGLE_MAPS_API_KEY` :
+   - *Application restrictions* → **IP addresses** → `168.231.85.64` (IP du VPS).
+   - *API restrictions* → inclure au minimum **Places API (New)**.
+3. Sur le VPS : `grep GOOGLE_MAPS_API_KEY /opt/jttof/backend/.env` — la clé doit être celle du même projet.
+4. Redémarrer : `sudo systemctl restart jttof`, puis tester :
+   `curl -s "https://cocon.sbs/api/search/place?q=paris" | head -c 200`
+
 ## Accès par IP seule (sans domaine)
 
 Pas de Certbot ni HTTPS pour l’instant — **HTTP uniquement** (mot de passe Basic Auth quand même).

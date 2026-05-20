@@ -19,6 +19,20 @@ router = APIRouter(prefix="/api/search", tags=["search"])
 
 
 # ─── Gestion d'erreurs commune ──────────────────────────────────────
+def _upstream_error_message(response: httpx.Response) -> str | None:
+    try:
+        data = response.json()
+    except Exception:
+        return None
+    if isinstance(data, dict):
+        err = data.get("error")
+        if isinstance(err, dict) and err.get("message"):
+            return str(err["message"])
+        if isinstance(data.get("detail"), str):
+            return data["detail"]
+    return None
+
+
 def _wrap_http_call(func, *args, label: str, **kwargs):
     """Wrappe un appel service pour mapper les erreurs sur des HTTPException."""
     try:
@@ -27,11 +41,21 @@ def _wrap_http_call(func, *args, label: str, **kwargs):
         # Clé API manquante / mal configurée
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except httpx.HTTPStatusError as exc:
-        # Le service externe a renvoyé une erreur (401, 429, 500…)
-        raise HTTPException(
-            status_code=502,
-            detail=f"{label} a répondu {exc.response.status_code}",
-        ) from exc
+        code = exc.response.status_code
+        extra = _upstream_error_message(exc.response)
+        if label == "Google Places" and code == 403:
+            detail = (
+                "Google Places refuse la clé API (403). Dans Google Cloud : "
+                "activer « Places API (New) », facturation activée, "
+                "restriction IP du serveur (168.231.85.64)."
+            )
+            if extra:
+                detail += f" Détail Google : {extra}"
+            raise HTTPException(status_code=502, detail=detail) from exc
+        detail = f"{label} a répondu {code}"
+        if extra:
+            detail += f" — {extra}"
+        raise HTTPException(status_code=502, detail=detail) from exc
     except httpx.HTTPError as exc:
         # Timeout, DNS, etc.
         raise HTTPException(status_code=502, detail=f"{label} injoignable") from exc
