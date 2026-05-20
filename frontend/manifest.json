@@ -1,0 +1,27 @@
+{
+  "name": "Cocon — notre carnet à deux",
+  "short_name": "Cocon",
+  "description": "Notre carnet à deux.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF1EB",
+  "theme_color": "#B86578",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png?v=3",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png?v=3",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["lifestyle", "social"],
+  "screenshots": []
+}

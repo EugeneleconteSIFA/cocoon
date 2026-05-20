@@ -1,0 +1,195 @@
+"""Gestion des Cocons (espaces partagés à deux)."""
+
+from __future__ import annotations
+
+import random
+import string
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from .. import auth, models, schemas
+from ..database import get_db
+
+router = APIRouter(prefix="/api/cocons", tags=["cocons"])
+
+
+def _generate_code(length: int = 8) -> str:
+    alphabet = string.ascii_uppercase + string.digits
+    return "".join(random.choices(alphabet, k=length))
+
+
+def _member_first_name(user: models.User) -> str | None:
+    if user.first_name and user.first_name.strip():
+        return user.first_name.strip()
+    if user.display_name:
+        part = user.display_name.strip().split()[0]
+        if part:
+            return part
+    return None
+
+
+def _cocon_member_first_names(cocon_id: int, db: Session) -> list[str]:
+    users = (
+        db.query(models.User)
+        .join(models.CoconMember, models.CoconMember.user_id == models.User.id)
+        .filter(models.CoconMember.cocon_id == cocon_id)
+        .order_by(models.CoconMember.id)
+        .all()
+    )
+    names: list[str] = []
+    for user in users:
+        label = _member_first_name(user)
+        if label:
+            names.append(label)
+    return names
+
+
+def _cocon_read(cocon: models.Cocon, role: str, db: Session) -> schemas.CoconRead:
+    member_count = (
+        db.query(models.CoconMember)
+        .filter(models.CoconMember.cocon_id == cocon.id)
+        .count()
+    )
+    return schemas.CoconRead(
+        id=cocon.id,
+        name=cocon.name,
+        code=cocon.code,
+        role=role,
+        member_count=member_count,
+        member_first_names=_cocon_member_first_names(cocon.id, db),
+        created_at=cocon.created_at,
+    )
+
+
+@router.post("", response_model=schemas.CoconRead, status_code=status.HTTP_201_CREATED)
+def create_cocon(
+    payload: schemas.CoconCreate,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Créer un nouveau Cocon et en devenir propriétaire."""
+    # Générer un code unique
+    code = _generate_code()
+    while db.query(models.Cocon).filter(models.Cocon.code == code).first():
+        code = _generate_code()
+
+    cocon = models.Cocon(
+        name=payload.name,
+        code=code,
+        created_by=current_user.id,
+    )
+    db.add(cocon)
+    db.flush()  # pour obtenir l'id avant le commit
+
+    membership = models.CoconMember(
+        cocon_id=cocon.id,
+        user_id=current_user.id,
+        role="owner",
+    )
+    db.add(membership)
+    db.commit()
+    db.refresh(cocon)
+
+    return _cocon_read(cocon, role="owner", db=db)
+
+
+@router.post("/join", response_model=schemas.CoconRead)
+def join_cocon(
+    payload: schemas.CoconJoin,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Rejoindre un Cocon existant via son code d'invitation."""
+    cocon = db.query(models.Cocon).filter(models.Cocon.code == payload.code).first()
+    if cocon is None:
+        raise HTTPException(status_code=404, detail="Code invalide ou Cocon introuvable")
+
+    already_member = (
+        db.query(models.CoconMember)
+        .filter(
+            models.CoconMember.cocon_id == cocon.id,
+            models.CoconMember.user_id == current_user.id,
+        )
+        .first()
+    )
+    if already_member:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Vous êtes déjà membre de ce Cocon",
+        )
+
+    membership = models.CoconMember(
+        cocon_id=cocon.id,
+        user_id=current_user.id,
+        role="member",
+    )
+    db.add(membership)
+    db.commit()
+
+    return _cocon_read(cocon, role="member", db=db)
+
+
+@router.get("", response_model=list[schemas.CoconRead])
+def list_cocons(
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Liste des Cocons dont je suis membre."""
+    memberships = (
+        db.query(models.CoconMember)
+        .filter(models.CoconMember.user_id == current_user.id)
+        .all()
+    )
+    result = []
+    for m in memberships:
+        cocon = db.get(models.Cocon, m.cocon_id)
+        if cocon:
+            result.append(_cocon_read(cocon, role=m.role, db=db))
+    return result
+
+
+def _delete_cocon_data(db: Session, cocon_id: int) -> None:
+    """Supprime un Cocon vide et toutes ses entrées de carnet."""
+    for model in (models.Culture, models.Lieu, models.Activite, models.Cuisine):
+        db.query(model).filter(model.cocon_id == cocon_id).delete()
+    db.query(models.CoconMember).filter(models.CoconMember.cocon_id == cocon_id).delete()
+    cocon = db.get(models.Cocon, cocon_id)
+    if cocon:
+        db.delete(cocon)
+
+
+@router.delete("/{cocon_id}/leave", status_code=status.HTTP_204_NO_CONTENT)
+def leave_cocon(
+    cocon_id: int,
+    current_user: models.User = Depends(auth.get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Quitter un Cocon (retirer mon adhésion)."""
+    membership = (
+        db.query(models.CoconMember)
+        .filter(
+            models.CoconMember.cocon_id == cocon_id,
+            models.CoconMember.user_id == current_user.id,
+        )
+        .first()
+    )
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Vous n'êtes pas membre de ce Cocon")
+
+    was_owner = membership.role == "owner"
+    db.delete(membership)
+    db.flush()
+
+    remaining = (
+        db.query(models.CoconMember)
+        .filter(models.CoconMember.cocon_id == cocon_id)
+        .order_by(models.CoconMember.id)
+        .all()
+    )
+    if not remaining:
+        _delete_cocon_data(db, cocon_id)
+    elif was_owner:
+        remaining[0].role = "owner"
+
+    db.commit()

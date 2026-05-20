@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#B86578" />
+  <meta name="description" content="Notre carnet à deux." />
+  <title>Cocon — notre carnet à deux</title>
+
+  <!-- PWA -->
+  <link rel="icon" href="/icons/favicon-32.png?v=3" type="image/png" sizes="32x32" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Cocon" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=3" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/style.css?v=17" />
+  <!-- www → apex : une seule origine pour le JWT (localStorage) -->
+  <script>
+    (function () {
+      var h = location.hostname;
+      if (h.indexOf('www.') === 0 && h.length > 4) {
+        location.replace(location.protocol + '//' + h.slice(4) + location.pathname + location.search + location.hash);
+      }
+    })();
+  </script>
+  <!-- Thème : appliqué avant le rendu + toggle indépendant de app.js (cache PWA) -->
+  <script>
+    (function () {
+      window.coconApplyTheme = function (theme) {
+        var root = document.documentElement;
+        var dark = theme === 'dark';
+        root.setAttribute('data-theme', theme);
+        root.classList.toggle('dark', dark);
+        root.classList.toggle('light', !dark);
+        try { localStorage.setItem('cocon:theme', theme); } catch (_e) { /* ignore */ }
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = dark ? '#1E1318' : '#B86578';
+      };
+
+      var saved = localStorage.getItem('cocon:theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var theme = saved === 'dark' || saved === 'light'
+        ? saved
+        : (prefersDark ? 'dark' : 'light');
+      window.coconApplyTheme(theme);
+
+      window.coconToggleTheme = function () {
+        var root = document.documentElement;
+        var isDark = root.getAttribute('data-theme') === 'dark' || root.classList.contains('dark');
+        window.coconApplyTheme(isDark ? 'light' : 'dark');
+      };
+
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var hasToken = !!localStorage.getItem('cocon:token');
+          var appEl = document.querySelector('.app');
+          if (!hasToken && appEl) {
+            appEl.classList.add('app--guest');
+            var welcome = document.querySelector('[data-guest-welcome]');
+            var tabbar = document.querySelector('[data-tabbar]');
+            if (welcome) welcome.hidden = false;
+            if (tabbar) tabbar.hidden = true;
+          } else if (hasToken) {
+            var coconSel = document.querySelector('[data-cocon-select]');
+            var coconLbl = document.querySelector('[data-cocon-label]');
+            if (coconSel) coconSel.hidden = false;
+            var coconName = localStorage.getItem('cocon:activeName');
+            if (coconName && coconLbl) coconLbl.textContent = coconName;
+          }
+        } catch (_e) { /* ignore */ }
+
+        var btn = document.querySelector('[data-action="toggle-theme"]');
+        if (!btn || btn.dataset.themeBound) return;
+        btn.dataset.themeBound = '1';
+        btn.addEventListener('click', function (e) {
+          e.stopImmediatePropagation();
+          window.coconToggleTheme();
+        }, true);
+      });
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- ─── Définitions SVG réutilisables (icônes & ornement) ───────── -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <!-- Pivoine ornement -->
+      <symbol id="i-peony" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+          <circle cx="12" cy="12" r="2.2" />
+          <ellipse cx="12" cy="6.5" rx="2.4" ry="3.4" />
+          <ellipse cx="12" cy="17.5" rx="2.4" ry="3.4" />
+          <ellipse cx="6.5" cy="12" rx="3.4" ry="2.4" />
+          <ellipse cx="17.5" cy="12" rx="3.4" ry="2.4" />
+        </g>
+      </symbol>
+
+      <!-- Culture : pellicule de film -->
+      <symbol id="i-culture" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3.5" y="5" width="17" height="14" rx="2" />
+          <line x1="3.5" y1="9" x2="20.5" y2="9" />
+          <line x1="3.5" y1="15" x2="20.5" y2="15" />
+          <circle cx="6" cy="7" r="0.6" fill="currentColor" />
+          <circle cx="6" cy="12" r="0.6" fill="currentColor" />
+          <circle cx="6" cy="17" r="0.6" fill="currentColor" />
+          <circle cx="18" cy="7" r="0.6" fill="currentColor" />
+          <circle cx="18" cy="12" r="0.6" fill="currentColor" />
+          <circle cx="18" cy="17" r="0.6" fill="currentColor" />
+        </g>
+      </symbol>
+
+      <!-- Lieux : pin -->
+      <symbol id="i-lieux" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 21s-7-7-7-12a7 7 0 0114 0c0 5-7 12-7 12z" />
+          <circle cx="12" cy="9" r="2.4" />
+        </g>
+      </symbol>
+
+      <!-- Activités : cœur dans cercle -->
+      <symbol id="i-activites" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 16.5s-4-2.5-4-5.7c0-1.4 1.1-2.4 2.3-2.4 1 0 1.5.5 1.7 1.1.2-.6.7-1.1 1.7-1.1 1.2 0 2.3 1 2.3 2.4 0 3.2-4 5.7-4 5.7z" />
+        </g>
+      </symbol>
+
+      <!-- Cuisine : casserole + vapeur -->
+      <symbol id="i-cuisine" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11h16v6a3 3 0 01-3 3H7a3 3 0 01-3-3v-6z" />
+          <line x1="2" y1="11" x2="22" y2="11" />
+          <line x1="20" y1="14" x2="22" y2="14" />
+          <path d="M10 7c0-1 1-1.5 1-2.5S10 3.5 10 3M14 7c0-1 1-1.5 1-2.5S14 3.5 14 3" />
+        </g>
+      </symbol>
+
+      <!-- Plus -->
+      <symbol id="i-plus" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </g>
+      </symbol>
+
+      <!-- Recherche -->
+      <symbol id="i-search" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="6.5" />
+          <line x1="20" y1="20" x2="16" y2="16" />
+        </g>
+      </symbol>
+
+      <!-- Corbeille -->
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 7h16" />
+          <path d="M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2" />
+          <path d="M6 7l1 13a1 1 0 001 1h8a1 1 0 001-1l1-13" />
+          <line x1="10" y1="11" x2="10" y2="17" />
+          <line x1="14" y1="11" x2="14" y2="17" />
+        </g>
+      </symbol>
+
+      <!-- Partager -->
+      <symbol id="i-share" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="18" cy="5" r="3" />
+          <circle cx="6" cy="12" r="3" />
+          <circle cx="18" cy="19" r="3" />
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+        </g>
+      </symbol>
+
+      <!-- Admin : graphique -->
+      <symbol id="i-admin" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="12" width="4" height="8" rx="1" />
+          <rect x="10" y="8" width="4" height="12" rx="1" />
+          <rect x="16" y="4" width="4" height="16" rx="1" />
+        </g>
+      </symbol>
+
+      <!-- Dés (tirage au sort) -->
+      <symbol id="i-shuffle" viewBox="0 0 24 24">
+        <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7h4l10 10h4" />
+          <path d="M3 17h4l3-3" />
+          <path d="M14 10l3-3h4" />
+          <polyline points="18 4 21 7 18 10" />
+          <polyline points="18 14 21 17 18 20" />
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="app">
+    <!-- ─── Header ──────────────────────────────────────────────── -->
+    <header class="topbar" role="banner">
+      <div class="topbar__brand">
+        <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
+          <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
+        </a>
+        <div class="topbar__cocon">
+          <div class="cocon-switcher" data-cocon-select hidden>
+          <button
+            class="cocon-switcher__name"
+            type="button"
+            data-cocon-trigger
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-controls="cocon-select-menu"
+          >
+            <span data-cocon-label>Mon cocon</span>
+          </button>
+          <div class="cocon-switcher__menu" id="cocon-select-menu" data-cocon-menu hidden role="listbox" aria-label="Autres cocons">
+            <p class="cocon-switcher__menu-title">Changer de cocon</p>
+            <ul class="cocon-switcher__list" data-cocon-list></ul>
+            <button class="cocon-switcher__new" type="button" data-action="new-cocon">+ Nouveau cocon</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar__tools">
+        <button class="icon-button" type="button" data-action="open-user" aria-label="Mon compte" data-user-btn>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+        </button>
+        <button class="btn-theme" type="button" data-action="toggle-theme" aria-label="Changer de thème">
+          <!-- Lune (mode clair → bascule en sombre) -->
+          <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <!-- Soleil (mode sombre → bascule en clair) -->
+          <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+          </svg>
+        </button>
+        <button class="icon-button" type="button" data-action="open-help" aria-label="Qu'est-ce que Cocon ?">
+          <svg class="icon icon--help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.5 9.25a2.75 2.75 0 0 1 5 1.5c0 1.5-2.5 2-2.5 3.75"/>
+            <circle cx="12" cy="17.25" r="0.75" fill="currentColor" stroke="none"/>
+          </svg>
+        </button>
+        <button class="icon-button" type="button" data-action="header-search" aria-label="Qu'est-ce qu'on cherche ?">
+          <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ─── Vues (une par pilier) ───────────────────────────────── -->
+    <main class="views" role="main">
+      <!-- Accueil invité (non connecté) -->
+      <section class="welcome" data-guest-welcome hidden aria-labelledby="welcome-title">
+        <header class="welcome__hero">
+          <h1 class="welcome__title" id="welcome-title">Cocon</h1>
+          <p class="welcome__tagline">Notre carnet à deux.</p>
+
+          <div class="welcome__divider" aria-hidden="true">
+            <span class="welcome__divider-line"></span>
+            <svg class="welcome__divider-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+            <span class="welcome__divider-line"></span>
+          </div>
+
+          <p class="welcome__lead">
+            Le carnet où on garde nos envies partagées — films, lieux, idées et recettes — pour ne plus rien oublier sur le canapé.
+          </p>
+        </header>
+
+        <ul class="welcome__pillars" aria-label="Quatre piliers du carnet">
+          <li class="welcome__pillar">
+            <span class="welcome__pillar-icon" aria-hidden="true">
+              <svg class="icon"><use href="#i-culture" /></svg>
+            </span>
+            <span class="welcome__pillar-name">Culture</span>
+            <span class="welcome__pillar-hint">Films &amp; séries</span>
+          </li>
+          <li class="welcome__pillar">
+            <span class="welcome__pillar-icon" aria-hidden="true">
+              <svg class="icon"><use href="#i-lieux" /></svg>
+            </span>
+            <span class="welcome__pillar-name">Lieux</span>
+            <span class="welcome__pillar-hint">Où aller</span>
+          </li>
+          <li class="welcome__pillar">
+            <span class="welcome__pillar-icon" aria-hidden="true">
+              <svg class="icon"><use href="#i-activites" /></svg>
+            </span>
+            <span class="welcome__pillar-name">Activités</span>
+            <span class="welcome__pillar-hint">À faire à deux</span>
+          </li>
+          <li class="welcome__pillar">
+            <span class="welcome__pillar-icon" aria-hidden="true">
+              <svg class="icon"><use href="#i-cuisine" /></svg>
+            </span>
+            <span class="welcome__pillar-name">Cuisine</span>
+            <span class="welcome__pillar-hint">Recettes &amp; envies</span>
+          </li>
+        </ul>
+
+        <div class="welcome__actions">
+          <button class="btn btn-primary welcome__cta" type="button" data-action="open-auth">
+            Se connecter
+          </button>
+          <button class="btn btn-ghost welcome__cta-secondary" type="button" data-action="open-auth" data-auth-tab="register">
+            Créer un compte
+          </button>
+          <p class="welcome__hint">Privé, pour nous deux. On ajoute en deux clics, on coche quand c'est fait.</p>
+        </div>
+
+        <div class="welcome__join-block">
+          <p class="welcome__join-kicker">Déjà invité·e ?</p>
+          <form class="welcome__join" data-guest-join-form novalidate>
+            <label class="welcome__join-label" for="guest-join-code">Code d'invitation</label>
+            <input
+              class="form-input form-input--mono welcome__join-input"
+              id="guest-join-code"
+              type="text"
+              data-guest-join-code
+              placeholder="Colle le ici"
+              autocomplete="off"
+              spellcheck="false"
+              enterkeyhint="go"
+            />
+            <button class="btn btn-ghost welcome__join-btn" type="submit">Rejoindre un cocon</button>
+          </form>
+        </div>
+      </section>
+
+      <div class="views__app" data-views-app>
+      <section class="view" data-view="culture" aria-labelledby="title-culture">
+        <header class="view-header">
+          <p class="kicker">Culture</p>
+          <h1 class="view-title" id="title-culture">À regarder ensemble</h1>
+        </header>
+        <div class="view-toolbar" data-culture-toolbar hidden>
+          <div class="filter-chips" role="group" aria-label="Filtrer par type">
+            <button class="chip is-active" type="button" data-filter="all">Tout</button>
+            <button class="chip" type="button" data-filter="movie">Films</button>
+            <button class="chip" type="button" data-filter="tv">Séries</button>
+          </div>
+          <button class="btn btn-ghost btn-shuffle" type="button" data-action="shuffle">
+            <svg class="icon" aria-hidden="true"><use href="#i-shuffle" /></svg>
+            <span>Tirer au sort</span>
+          </button>
+        </div>
+
+        <div class="culture-search" data-culture-search hidden>
+          <label class="search-label" for="culture-query">Qu'est-ce qu'on cherche ?</label>
+          <input
+            id="culture-query"
+            class="search-input"
+            type="search"
+            inputmode="search"
+            autocomplete="off"
+            placeholder="Tapez un titre…"
+          />
+          <p class="search-hint" data-search-hint hidden></p>
+          <ul class="search-results" data-search-results role="listbox" aria-label="Résultats TMDb"></ul>
+        </div>
+
+        <ul class="culture-grid" data-culture-grid role="list" hidden></ul>
+
+        <div class="empty" data-culture-empty>
+          <svg class="empty-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+          <p class="empty-title">Aucun film n'attend encore.</p>
+          <p class="empty-sub">Cherchez-en un, gardez-le pour plus tard.</p>
+          <button class="btn btn-primary" type="button" data-action="add-culture">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+            <span>Ajouter au carnet</span>
+          </button>
+        </div>
+
+        <button
+          class="fab"
+          type="button"
+          data-action="add-culture"
+          aria-label="Ajouter au carnet"
+          hidden
+        >
+          <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+        </button>
+      </section>
+
+      <section class="view" data-view="lieux" aria-labelledby="title-lieux" hidden>
+        <header class="view-header">
+          <p class="kicker">Lieux</p>
+          <h1 class="view-title" id="title-lieux">Là où on irait bien</h1>
+        </header>
+        <div class="view-toolbar" data-lieux-toolbar hidden>
+          <div class="filter-chips" role="group" aria-label="Filtrer par section">
+            <button class="chip is-active" type="button" data-lieux-filter="all">Tout</button>
+            <button class="chip" type="button" data-lieux-filter="ville">Notre ville</button>
+            <button class="chip" type="button" data-lieux-filter="autre_ville">Autre ville</button>
+            <button class="chip" type="button" data-lieux-filter="voyage">Voyage</button>
+          </div>
+          <button class="btn btn-ghost btn-shuffle" type="button" data-action="shuffle-lieux">
+            <svg class="icon" aria-hidden="true"><use href="#i-shuffle" /></svg>
+            <span>Tirer au sort</span>
+          </button>
+        </div>
+        <div class="add-panel" data-lieux-add hidden>
+          <label class="search-label" for="lieux-query">Quel endroit ?</label>
+          <input id="lieux-query" class="search-input" type="search" autocomplete="off" placeholder="Restaurant, musée, ville…" />
+          <p class="search-label">Où le ranger ?</p>
+          <div class="filter-chips" role="group" aria-label="Section du lieu">
+            <button class="chip is-active" type="button" data-lieux-section="ville">Notre ville</button>
+            <button class="chip" type="button" data-lieux-section="autre_ville">Autre ville</button>
+            <button class="chip" type="button" data-lieux-section="voyage">Voyage</button>
+          </div>
+          <p class="search-hint" data-lieux-hint hidden></p>
+          <ul class="search-results" data-lieux-results role="listbox"></ul>
+        </div>
+        <ul class="card-grid" data-lieux-grid role="list" hidden></ul>
+        <div class="empty" data-lieux-empty>
+          <svg class="empty-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+          <p class="empty-title">Aucun lieu noté.</p>
+          <p class="empty-sub">Ajoutez un endroit, en bas de la rue ou à l'autre bout du monde.</p>
+          <button class="btn btn-primary" type="button" data-action="add-lieux">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+            <span>Ajouter au carnet</span>
+          </button>
+        </div>
+        <button class="fab" type="button" data-action="add-lieux" aria-label="Ajouter au carnet" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+        </button>
+      </section>
+
+      <section class="view" data-view="activites" aria-labelledby="title-activites" hidden>
+        <header class="view-header">
+          <p class="kicker">Activités</p>
+          <h1 class="view-title" id="title-activites">Qu'est-ce qu'on a envie de faire</h1>
+        </header>
+        <div class="view-toolbar" data-activites-toolbar hidden>
+          <button class="btn btn-ghost btn-shuffle" type="button" data-action="shuffle-activites">
+            <svg class="icon" aria-hidden="true"><use href="#i-shuffle" /></svg>
+            <span>Tirer au sort</span>
+          </button>
+        </div>
+        <div class="add-panel" data-activites-add hidden>
+          <label class="search-label" for="activites-title">Quelle envie ?</label>
+          <input id="activites-title" class="search-input" type="text" autocomplete="off" placeholder="Pique-nique, patinoire, escape game…" />
+          <p class="search-label">Une petite icône ?</p>
+          <div class="emoji-picks" data-activites-emojis></div>
+          <p class="search-label">Tags (optionnel)</p>
+          <div class="filter-chips" role="group">
+            <button class="chip" type="button" data-activite-tag="intérieur">intérieur</button>
+            <button class="chip" type="button" data-activite-tag="extérieur">extérieur</button>
+            <button class="chip" type="button" data-activite-tag="gratuit">gratuit</button>
+            <button class="chip" type="button" data-activite-tag="payant">payant</button>
+            <button class="chip" type="button" data-activite-tag="calme">calme</button>
+            <button class="chip" type="button" data-activite-tag="actif">actif</button>
+          </div>
+          <button class="btn btn-primary add-panel__submit" type="button" data-action="submit-activite">Ajouter au carnet</button>
+        </div>
+        <ul class="activites-list" data-activites-list role="list" hidden></ul>
+        <div class="empty" data-activites-empty>
+          <svg class="empty-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+          <p class="empty-title">Aucune envie posée.</p>
+          <p class="empty-sub">Notez tout ce qui vous tente, du pique-nique au week-end skis.</p>
+          <button class="btn btn-primary" type="button" data-action="add-activites">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+            <span>Ajouter au carnet</span>
+          </button>
+        </div>
+        <button class="fab" type="button" data-action="add-activites" aria-label="Ajouter au carnet" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+        </button>
+      </section>
+
+      <section class="view" data-view="cuisine" aria-labelledby="title-cuisine" hidden>
+        <header class="view-header">
+          <p class="kicker">Cuisine</p>
+          <h1 class="view-title" id="title-cuisine">À tester un soir d'envie</h1>
+        </header>
+        <div class="view-toolbar" data-cuisine-toolbar hidden>
+          <button class="btn btn-ghost btn-shuffle" type="button" data-action="shuffle-cuisine">
+            <svg class="icon" aria-hidden="true"><use href="#i-shuffle" /></svg>
+            <span>Tirer au sort</span>
+          </button>
+        </div>
+        <div class="add-panel" data-cuisine-add hidden>
+          <div class="mode-tabs" role="tablist">
+            <button class="chip is-active" type="button" data-cuisine-mode="url" role="tab">Lien</button>
+            <button class="chip" type="button" data-cuisine-mode="title" role="tab">Titre</button>
+          </div>
+          <div data-cuisine-panel-url>
+            <label class="search-label" for="cuisine-url">Coller un lien</label>
+            <input id="cuisine-url" class="search-input" type="url" inputmode="url" placeholder="Marmiton, blog, Instagram…" />
+            <button class="btn btn-primary add-panel__submit" type="button" data-action="cuisine-from-url">Récupérer et ajouter</button>
+          </div>
+          <div data-cuisine-panel-title hidden>
+            <label class="search-label" for="cuisine-title">Nom de la recette</label>
+            <input id="cuisine-title" class="search-input" type="text" placeholder="Tarte aux pommes de mamie…" />
+            <label class="search-label drop-zone" data-cuisine-drop>
+              <input type="file" accept="image/*" data-cuisine-file hidden />
+              <span data-cuisine-drop-label>Glisser une photo ici (optionnel)</span>
+            </label>
+            <button class="btn btn-primary add-panel__submit" type="button" data-action="cuisine-from-title">Ajouter au carnet</button>
+          </div>
+          <p class="search-hint" data-cuisine-hint hidden></p>
+        </div>
+        <ul class="card-grid" data-cuisine-grid role="list" hidden></ul>
+        <div class="empty" data-cuisine-empty>
+          <svg class="empty-ornament" aria-hidden="true"><use href="#i-peony" /></svg>
+          <p class="empty-title">Aucune recette gardée.</p>
+          <p class="empty-sub">Collez un lien, ou tapez juste le nom — on s'en souviendra.</p>
+          <button class="btn btn-primary" type="button" data-action="add-cuisine">
+            <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+            <span>Ajouter au carnet</span>
+          </button>
+        </div>
+        <button class="fab" type="button" data-action="add-cuisine" aria-label="Ajouter au carnet" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-plus" /></svg>
+        </button>
+      </section>
+
+      <section class="view" id="admin-section" data-view="admin" aria-labelledby="title-admin" hidden>
+        <header class="view-header">
+          <p class="kicker">Administration</p>
+          <h1 class="view-title" id="title-admin">Vue d'ensemble</h1>
+        </header>
+        <div class="admin-root" data-admin-root></div>
+      </section>
+      </div>
+    </main>
+
+    <!-- ─── Footer : onglets (connecté uniquement) ─────────────── -->
+    <nav class="tabbar" data-tabbar role="navigation" aria-label="Sections principales" hidden>
+      <div class="tabbar__pillars" data-tabbar-pillars>
+        <a class="tab" href="#culture" data-tab="culture">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-culture" /></svg>
+          <span class="tab-label">Culture</span>
+        </a>
+        <a class="tab" href="#lieux" data-tab="lieux">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-lieux" /></svg>
+          <span class="tab-label">Lieux</span>
+        </a>
+        <a class="tab" href="#activites" data-tab="activites">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-activites" /></svg>
+          <span class="tab-label">Activités</span>
+        </a>
+        <a class="tab" href="#cuisine" data-tab="cuisine">
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-cuisine" /></svg>
+          <span class="tab-label">Cuisine</span>
+        </a>
+        <a class="tab" href="#admin" data-tab="admin" data-admin-tab hidden>
+          <svg class="tab-icon" aria-hidden="true"><use href="#i-admin" /></svg>
+          <span class="tab-label">Admin</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ─── Modale Auth (login / register) ──────────────────────── -->
+  <div class="modal-backdrop" data-auth-backdrop hidden></div>
+  <div class="modal" data-auth-modal role="dialog" aria-modal="true" aria-labelledby="auth-title" hidden>
+    <div class="modal__header">
+      <h2 class="modal__title" id="auth-title">Bienvenue dans Cocon</h2>
+      <button class="icon-button modal__close" type="button" data-action="close-auth" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Tabs login / register -->
+    <div class="modal__tabs" role="tablist">
+      <button class="modal__tab is-active" type="button" data-auth-tab="login" role="tab">Connexion</button>
+      <button class="modal__tab" type="button" data-auth-tab="register" role="tab">Créer un compte</button>
+    </div>
+
+    <!-- Login -->
+    <form class="modal__form" data-auth-form="login" novalidate>
+      <label class="form-label" for="login-email">Email</label>
+      <input class="form-input" id="login-email" type="email" inputmode="email" autocomplete="email" placeholder="ton@email.fr" required />
+      <label class="form-label" for="login-password">Mot de passe</label>
+      <input class="form-input" id="login-password" type="password" autocomplete="current-password" placeholder="••••••" required />
+      <p class="form-error" data-auth-error hidden></p>
+      <button class="btn btn-primary btn--full" type="submit">Se connecter</button>
+    </form>
+
+    <!-- Register -->
+    <form class="modal__form" data-auth-form="register" hidden novalidate>
+      <label class="form-label" for="reg-email">Email</label>
+      <input class="form-input" id="reg-email" type="email" inputmode="email" autocomplete="email" placeholder="ton@email.fr" required />
+      <label class="form-label" for="reg-password">Mot de passe</label>
+      <input class="form-input" id="reg-password" type="password" autocomplete="new-password" placeholder="6 caractères min." required />
+      <p class="form-error" data-auth-error hidden></p>
+      <button class="btn btn-primary btn--full" type="submit">Créer mon compte</button>
+    </form>
+  </div>
+
+  <!-- ─── Modale Profil & Cocons ───────────────────────────────── -->
+  <div class="modal-backdrop" data-user-backdrop hidden></div>
+  <div class="modal modal--account" data-user-modal role="dialog" aria-modal="true" aria-labelledby="user-title" hidden>
+    <div class="modal__header">
+      <h2 class="modal__title" id="user-title" data-user-display-name>Mon compte</h2>
+      <button class="icon-button modal__close" type="button" data-action="close-user" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="modal__tabs user-modal__tabs" role="tablist" aria-label="Compte">
+      <button type="button" class="modal__tab is-active" data-user-tab="profil" role="tab" aria-selected="true">Mon profil</button>
+      <button type="button" class="modal__tab" data-user-tab="cocons" role="tab" aria-selected="false">Mes cocons</button>
+    </div>
+
+    <section class="user-panel" data-user-panel="profil">
+      <form class="modal__form profile-form" data-profile-form novalidate>
+        <div class="form-field">
+          <label class="form-label" for="profile-email">Adresse email</label>
+          <input class="form-input form-input--readonly" id="profile-email" type="email" data-profile-email readonly tabindex="-1" aria-readonly="true" />
+          <p class="form-hint">Email de connexion (non modifiable).</p>
+        </div>
+        <div class="profile-form__row profile-form__row--2">
+          <div class="form-field">
+            <label class="form-label" for="profile-first-name">Prénom</label>
+            <input class="form-input" id="profile-first-name" type="text" data-profile-first-name autocomplete="given-name" required />
+          </div>
+          <div class="form-field">
+            <label class="form-label" for="profile-last-name">Nom</label>
+            <input class="form-input" id="profile-last-name" type="text" data-profile-last-name autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="profile-birth-date">Date de naissance</label>
+          <input class="form-input" id="profile-birth-date" type="date" data-profile-birth-date autocomplete="bday" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="profile-password">Nouveau mot de passe</label>
+          <input class="form-input" id="profile-password" type="password" data-profile-password autocomplete="new-password" placeholder="Laisser vide pour ne pas changer" />
+        </div>
+        <p class="profile-meta" data-profile-created hidden></p>
+        <p class="form-error" data-profile-error hidden></p>
+        <button class="btn btn-primary btn--full" type="submit">Enregistrer</button>
+      </form>
+      <button class="btn btn-ghost btn--danger user-panel__logout" type="button" data-action="logout">Se déconnecter</button>
+    </section>
+
+    <section class="user-panel" data-user-panel="cocons" hidden>
+      <ul class="cocon-manage-list" data-cocon-manage-list role="list"></ul>
+      <div class="cocon-actions">
+        <button class="btn btn-primary" type="button" data-action="create-cocon">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Créer un cocon
+        </button>
+        <button class="btn btn-ghost" type="button" data-action="join-cocon">Rejoindre avec un code</button>
+      </div>
+    </section>
+
+    <!-- Formulaire créer un cocon (inline, caché par défaut) -->
+    <form class="modal__form modal__sub-form" data-create-cocon-form hidden novalidate>
+      <label class="form-label" for="cocon-name">Nom de votre cocon</label>
+      <input class="form-input" id="cocon-name" type="text" placeholder="Notre bulle, L'aventure…" required />
+      <p class="form-hint">Un code unique sera généré pour inviter l'autre.</p>
+      <div class="modal__form-actions">
+        <button class="btn btn-primary" type="submit">Créer</button>
+        <button class="btn btn-ghost" type="button" data-action="cancel-cocon-form">Annuler</button>
+      </div>
+    </form>
+
+    <!-- Formulaire rejoindre un cocon (inline, caché par défaut) -->
+    <form class="modal__form modal__sub-form" data-join-cocon-form hidden novalidate>
+      <label class="form-label" for="cocon-code">Code d'invitation</label>
+      <input class="form-input form-input--mono" id="cocon-code" type="text" placeholder="EX: AB12CD34" maxlength="8" autocomplete="off" required />
+      <div class="modal__form-actions">
+        <button class="btn btn-primary" type="submit">Rejoindre</button>
+        <button class="btn btn-ghost" type="button" data-action="cancel-cocon-form">Annuler</button>
+      </div>
+    </form>
+
+    <p class="form-error" data-cocon-error hidden></p>
+  </div>
+
+  <!-- ─── Modale Aide ──────────────────────────────────────────── -->
+  <div class="modal-backdrop" data-help-backdrop hidden></div>
+  <div class="modal modal--help" data-help-modal role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+    <div class="modal__header">
+      <h2 class="modal__title" id="help-title">Notre petit carnet</h2>
+      <button class="icon-button modal__close" type="button" data-action="close-help" aria-label="Fermer">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="help-prose">
+      <p class="help-tagline"><em>Notre carnet à deux.</em></p>
+      <p>
+        <strong>Cocon</strong>, c'est l'endroit où vos envies à deux finissent par rester :
+        le film dont vous parliez sur le canapé, le resto repéré en balade, l'idée de week-end,
+        la recette à tester un dimanche pluvieux.
+      </p>
+      <p>
+        Pas de formulaires interminables, pas de todo-list froide — juste un carnet doux
+        où vous déposez une idée en deux clics et où vous retrouvez tout plus tard.
+      </p>
+
+      <section class="modal__section">
+        <h3 class="modal__section-label">Comment s'en servir</h3>
+        <ul class="help-list">
+          <li><strong>Culture</strong> — tapez quelques lettres, choisissez l'affiche, c'est ajouté.</li>
+          <li><strong>Lieux</strong> — cherchez un endroit, la fiche arrive avec photo et adresse.</li>
+          <li><strong>Activités</strong> — une courte phrase suffit pour garder l'envie.</li>
+          <li><strong>Cuisine</strong> — une recette, un lien, ou quelques mots : on s'en souvient.</li>
+        </ul>
+        <p class="help-note">
+          Le bouton <strong>+</strong> en bas ajoute dans l'onglet ouvert.
+          Le <strong>tirage au sort</strong> propose une idée quand vous ne savez pas quoi faire ce soir.
+          Touchez une carte pour la marquer « fait ensemble » ou la ranger.
+        </p>
+      </section>
+
+      <section class="modal__section">
+        <h3 class="modal__section-label">Votre cocon</h3>
+        <p>
+          Créez un cocon à deux, invitez l'autre avec le code, et tout ce que vous ajoutez
+          apparaît pour vous deux. Vous pouvez en avoir plusieurs (amis, famille…) et changer
+          de cocon depuis le nom en haut à gauche.
+        </p>
+      </section>
+
+      <section class="modal__section">
+        <h3 class="modal__section-label">Sur votre téléphone</h3>
+        <p class="help-install-intro">
+          Cocon fonctionne dans le navigateur, mais vous pouvez l'installer comme une vraie app
+          sur l'écran d'accueil — pratique depuis le canapé.
+        </p>
+
+        <div class="help-install">
+          <h4 class="help-install__platform">
+            <span class="help-install__badge" aria-hidden="true">🍎</span>
+            iPhone (Safari)
+          </h4>
+          <ol class="help-steps">
+            <li>Ouvrez cette page dans <strong>Safari</strong> (pas dans une autre app).</li>
+            <li>Touchez <strong>Partager</strong> <span class="help-steps__icon" aria-hidden="true">□↑</span> en bas de l'écran.</li>
+            <li>Choisissez <strong>Sur l'écran d'accueil</strong> (ou « Ajouter à l'écran d'accueil »).</li>
+            <li>Confirmez — l'icône rose <strong>Cocon</strong> apparaît comme une app à part entière.</li>
+          </ol>
+        </div>
+
+        <div class="help-install">
+          <h4 class="help-install__platform">
+            <span class="help-install__badge" aria-hidden="true">🤖</span>
+            Android (Chrome)
+          </h4>
+          <ol class="help-steps">
+            <li>Ouvrez cette page dans <strong>Chrome</strong>.</li>
+            <li>Touchez le menu <strong>⋮</strong> en haut à droite.</li>
+            <li>Choisissez <strong>Installer l'application</strong> ou <strong>Ajouter à l'écran d'accueil</strong>.</li>
+            <li>Validez — Cocon se lance ensuite en plein écran, sans barre d'adresse.</li>
+          </ol>
+        </div>
+
+        <p class="help-note help-note--tip">
+          Astuce : une fois installée, l'app reste accessible même hors connexion pour parcourir
+          ce que vous avez déjà ajouté.
+        </p>
+      </section>
+    </div>
+  </div>
+
+  <!-- ─── Bottom sheet Culture (détail + actions) ─────────────── -->
+  <div class="sheet-backdrop" data-sheet-backdrop hidden></div>
+  <aside
+    class="bottom-sheet"
+    data-sheet
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="sheet-title"
+    hidden
+  >
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-body" data-sheet-body></div>
+  </aside>
+
+  <!-- ─── Tirage au sort (révélation) ───────────────────────────── -->
+  <div class="shuffle-overlay" data-shuffle-overlay hidden>
+    <div class="shuffle-card" role="status" data-shuffle-card></div>
+    <button class="btn btn-ghost" type="button" data-action="shuffle-close">Fermer</button>
+  </div>
+
+  <script src="/app.js?v=17" defer></script>
+  <!-- PWA : SW uniquement en local ou HTTPS -->
+  <script>
+    (function () {
+      var host = location.hostname;
+      var ok = host === 'localhost' || host === '127.0.0.1' || location.protocol === 'https:';
+      if (!ok || !('serviceWorker' in navigator)) return;
+
+      var SW_MIGRATE_KEY = 'cocon:sw-migrate-v10';
+
+      function clearLegacyCaches() {
+        if (!('caches' in window)) return Promise.resolve();
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }
+
+      window.addEventListener('load', function () {
+        var migrated = false;
+        try { migrated = localStorage.getItem(SW_MIGRATE_KEY) === '1'; } catch (_e) { /* ignore */ }
+
+        var setup = migrated
+          ? Promise.resolve()
+          : navigator.serviceWorker.getRegistrations().then(function (regs) {
+              return Promise.all(regs.map(function (r) { return r.unregister(); }));
+            }).then(clearLegacyCaches).then(function () {
+              try { localStorage.setItem(SW_MIGRATE_KEY, '1'); } catch (_e) { /* ignore */ }
+            });
+
+        setup.then(function () {
+          return navigator.serviceWorker.register('/sw.js?v=10');
+        }).then(function () {
+          if (!migrated) location.reload();
+        }).catch(function (err) {
+          console.warn('SW registration failed:', err);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

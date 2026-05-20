@@ -1,0 +1,32 @@
+# Cocon — service systemd
+# Installation : voir deploy/README.md
+#
+#   sudo cp deploy/jttof.service /etc/systemd/system/jttof.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now jttof
+
+[Unit]
+Description=Cocon — carnet à deux (FastAPI + uvicorn)
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jttof
+Group=jttof
+WorkingDirectory=/opt/jttof
+Environment=PYTHONPATH=/opt/jttof
+EnvironmentFile=-/opt/jttof/backend/.env
+
+# Production : pas de --reload
+ExecStart=/opt/jttof/.venv/bin/python -m uvicorn backend.main:app --host 127.0.0.1 --port 8765 --workers 1
+
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# SQLite + uploads modestes
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target
