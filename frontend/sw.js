@@ -4,11 +4,12 @@
  *  Icônes / manifest → cache pour offline.
  * ════════════════════════════════════════════════════════════════ */
 
-const CACHE_NAME = 'cocon-v12';
+const CACHE_NAME = 'cocon-v13';
 
 const OFFLINE_ASSETS = [
   '/manifest.json',
-  '/icons/favicon-32.png',
+  '/icons/favicon.svg',
+  '/icons/favicon.ico',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',

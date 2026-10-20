@@ -8,13 +8,14 @@
   <title>Cocon — notre carnet à deux</title>
 
   <!-- PWA -->
-  <link rel="icon" href="/icons/favicon-32.png?v=3" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/icons/favicon.ico?v=4" sizes="32x32" />
+  <link rel="icon" href="/icons/favicon.svg?v=4" type="image/svg+xml" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Cocon" />
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=3" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=4" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,7 +23,7 @@
     href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="/style.css?v=22" />
+  <link rel="stylesheet" href="/style.css?v=23" />
   <!-- www → apex : une seule origine pour le JWT (localStorage) -->
   <script>
     (function () {
@@ -96,13 +97,15 @@
     <defs>
       <!-- Pivoine ornement -->
       <symbol id="i-peony" viewBox="0 0 24 24">
-        <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
-          <circle cx="12" cy="12" r="2.2" />
-          <ellipse cx="12" cy="6.5" rx="2.4" ry="3.4" />
-          <ellipse cx="12" cy="17.5" rx="2.4" ry="3.4" />
-          <ellipse cx="6.5" cy="12" rx="3.4" ry="2.4" />
-          <ellipse cx="17.5" cy="12" rx="3.4" ry="2.4" />
+        <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9.2 8.1A3.2 3.2 0 1 1 14.8 8.1A3.2 3.2 0 1 1 16.7 13.5A3.2 3.2 0 1 1 12 16.9A3.2 3.2 0 1 1 7.3 13.5A3.2 3.2 0 1 1 9.2 8.1Z" />
+          <circle cx="12" cy="12" r="1.9" />
         </g>
+      </symbol>
+
+      <!-- Pivoine pleine : le logo (même dessin que /icons/favicon.svg) -->
+      <symbol id="i-peony-fill" viewBox="0 0 24 24">
+        <path fill="currentColor" fill-rule="evenodd" d="M9.2 8.1A3.2 3.2 0 1 1 14.8 8.1A3.2 3.2 0 1 1 16.7 13.5A3.2 3.2 0 1 1 12 16.9A3.2 3.2 0 1 1 7.3 13.5A3.2 3.2 0 1 1 9.2 8.1Z M12 10.1A1.9 1.9 0 1 0 12 13.9A1.9 1.9 0 1 0 12 10.1Z" />
       </symbol>
 
       <!-- Culture : pellicule de film -->
@@ -235,7 +238,7 @@
     <header class="topbar" role="banner">
       <div class="topbar__brand">
         <a class="logo" href="#culture" aria-label="Cocon, retour à l'accueil">
-          <svg class="logo__peony" aria-hidden="true"><use href="#i-peony" /></svg>
+          <svg class="logo__peony" aria-hidden="true"><use href="#i-peony-fill" /></svg>
         </a>
         <div class="topbar__cocon">
           <div class="cocon-switcher" data-cocon-select hidden>
@@ -297,6 +300,7 @@
       <!-- Accueil invité (non connecté) -->
       <section class="welcome" data-guest-welcome hidden aria-labelledby="welcome-title">
         <header class="welcome__hero">
+          <svg class="welcome__mark" aria-hidden="true"><use href="#i-peony-fill" /></svg>
           <h1 class="welcome__title" id="welcome-title">Cocon</h1>
           <p class="welcome__tagline">Notre carnet à deux.</p>
           <p class="welcome__lead">
@@ -341,6 +345,9 @@
         </div>
 
         <div class="welcome__join-block">
+          <div class="welcome__ornament" aria-hidden="true">
+            <svg><use href="#i-peony" /></svg>
+          </div>
           <p class="welcome__join-kicker">Déjà invité·e ?</p>
           <form class="welcome__join" data-guest-join-form novalidate>
             <label class="visually-hidden" for="guest-join-code">Code d'invitation</label>

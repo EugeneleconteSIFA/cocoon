@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect class="fill-ink" width="64" height="64" rx="15"/>
+  <path class="fill-tint" d="M27 24.5A6.5 6.5 0 1 1 37 24.5A6.5 6.5 0 1 1 40.5 35.5A6.5 6.5 0 1 1 32 42A6.5 6.5 0 1 1 23.5 35.5A6.5 6.5 0 1 1 27 24.5Z"/>
+  <circle class="fill-ink" cx="32" cy="32.5" r="3.5"/>
+</svg>

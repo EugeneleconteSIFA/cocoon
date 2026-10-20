@@ -147,14 +147,14 @@ body {
   height: 40px;
   flex-shrink: 0;
   border-radius: var(--radius-pill);
-  color: var(--ink-soft);
+  color: var(--peony);
   text-decoration: none;
   transition: background-color var(--t) var(--ease), color var(--t) var(--ease);
 }
 
 .logo:hover {
   background: var(--ivory);
-  color: var(--peony);
+  color: var(--peony-deep);
 }
 
 .logo__peony {
@@ -288,8 +288,34 @@ body {
 }
 
 .welcome__hero {
+  position: relative;
+  isolation: isolate;
   width: 100%;
   flex-shrink: 0;
+  animation: welcome-in 520ms var(--ease) both;
+}
+
+/* Lumière de bougie derrière la marque : imperceptible, juste un halo de papier */
+.welcome__hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: -40px;
+  width: 320px;
+  height: 240px;
+  transform: translateX(-50%);
+  background: radial-gradient(closest-side, var(--paper), transparent);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.welcome__mark {
+  display: block;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto var(--space-3);
+  color: var(--peony);
 }
 
 .welcome__title {
@@ -317,14 +343,16 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: var(--ink);
-  margin: 0;
+  max-width: 34ch;
+  margin: 0 auto;
+  text-wrap: balance;
   text-align: center;
 }
 
 .welcome__pillars {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
   width: 100%;
   list-style: none;
   margin: 0;
@@ -338,19 +366,24 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-3);
-  background: var(--ivory);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
+  padding: 0;
+  animation: welcome-in 520ms var(--ease) both;
 }
+
+.welcome__pillar:nth-child(2) { animation-delay: 60ms; }
+.welcome__pillar:nth-child(3) { animation-delay: 120ms; }
+.welcome__pillar:nth-child(4) { animation-delay: 180ms; }
 
 .welcome__pillar-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--rose);
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-pill);
+  background: var(--paper);
+  box-shadow: var(--shadow-1), inset 0 0 0 1px var(--line-copper);
+  color: var(--peony);
 }
 
 .welcome__pillar-icon .icon {
@@ -385,9 +418,30 @@ body {
 
 .welcome__join-block {
   width: 100%;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--line-copper);
   flex-shrink: 0;
+}
+
+/* Filet — fleur — filet (DA §6) */
+.welcome__ornament {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  color: var(--copper);
+}
+
+.welcome__ornament::before,
+.welcome__ornament::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line-copper);
+}
+
+.welcome__ornament svg {
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
 }
 
 .welcome__join-kicker {
@@ -415,10 +469,27 @@ body {
   flex: 1;
   min-width: 0;
   padding: 10px var(--space-3);
-  font-size: 14px;
-  letter-spacing: 0.08em;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 15px;
+  letter-spacing: 0.12em;
   text-align: center;
   text-transform: uppercase;
+}
+
+.welcome__join-input.form-input--mono::placeholder {
+  font-style: italic;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+@keyframes welcome-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome__hero,
+  .welcome__pillar { animation: none; }
 }
 
 .welcome__join-btn {
@@ -454,8 +525,10 @@ body {
     line-height: 1.4;
   }
 
-  .welcome__pillar {
-    padding: var(--space-3) var(--space-2);
+  .welcome__mark {
+    width: 36px;
+    height: 36px;
+    margin-bottom: var(--space-2);
   }
 
   .welcome__pillar-name {
@@ -463,8 +536,8 @@ body {
   }
 
   .welcome__pillar-icon {
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
   }
 
   .welcome__pillar-icon .icon {
@@ -482,8 +555,8 @@ body {
     font-size: 12px;
   }
 
-  .welcome__join-block {
-    padding-top: var(--space-3);
+  .welcome__ornament {
+    margin-bottom: var(--space-3);
   }
 }
 
