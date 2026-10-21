@@ -347,6 +347,7 @@
       try {
         const data = await apiForm('/api/auth/login', { username: email, password });
         session.save(data.access_token, data.user);
+        window.kernse?.track('connexion'); // studio Kernse : compte les connexions (sans donnée personnelle)
         this.close();
         updateAuthUI(true);
         userModal.updateUserDisplay();
@@ -363,6 +364,7 @@
       try {
         const data = await api('POST', '/api/auth/register', { email, password, display_name });
         session.save(data.access_token, data.user);
+        window.kernse?.track('inscription'); // studio Kernse : compte les inscriptions (sans donnée personnelle)
         this.close();
         updateAuthUI(true);
         userModal.updateUserDisplay();
