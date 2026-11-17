@@ -11,15 +11,19 @@ en prod, Nginx prend le relais).
 from __future__ import annotations
 
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import httpx
 from fastapi import FastAPI
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import HTMLResponse, Response
 
 from .database import init_db
 from .routers import (
@@ -105,6 +109,38 @@ def health() -> dict:
         "env": os.getenv("APP_ENV", "local"),
         "secret_key_set": bool((os.getenv("SECRET_KEY") or "").strip()),
     }
+
+
+# ─── Page 404 jouable (commune aux sites Kernse) ──────────────────
+# Une page introuvable demandée par un navigateur reçoit le petit jeu de Kernse (service kernse-studio,
+# même VPS), aux couleurs de Cocon : la page choisit son thème selon le domaine. Gardée 10 min en mémoire.
+# Les appels /api gardent leur 404 JSON ; si Kernse ne répond pas, la 404 d'origine reste.
+KERNSE_PERDU_URL = os.getenv("KERNSE_PERDU_URL", "http://127.0.0.1:8110/perdu")
+_perdu: dict = {"t": 0.0, "html": None}
+
+
+async def _page_perdu() -> str | None:
+    if _perdu["html"] and time.time() - _perdu["t"] < 600:
+        return _perdu["html"]
+    try:
+        async with httpx.AsyncClient(timeout=2) as c:
+            r = await c.get(KERNSE_PERDU_URL, headers={"Host": "cocon.sbs"})
+        if r.status_code == 200 and "<canvas" in r.text:
+            _perdu.update(t=time.time(), html=r.text)
+    except Exception:
+        pass
+    return _perdu["html"]
+
+
+@app.exception_handler(StarletteHTTPException)
+async def _http_error(request: Request, exc: StarletteHTTPException):
+    if (exc.status_code == 404 and request.method in ("GET", "HEAD")
+            and not request.url.path.startswith("/api/")
+            and "text/html" in request.headers.get("accept", "")):
+        jeu = await _page_perdu()
+        if jeu:
+            return HTMLResponse(jeu, status_code=404, headers={"X-Robots-Tag": "noindex, nofollow"})
+    return await http_exception_handler(request, exc)
 
 
 # ─── Frontend statique ────────────────────────────────────────────
